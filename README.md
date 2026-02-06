@@ -86,7 +86,7 @@ sudo nano /opt/intra-hub/.env
 填入你的 Notion 凭证：
 
 ```
-NOTION_TOKEN=secret_xxxxxxxxxxxxx
+NOTION_TOKEN=<YOUR_NOTION_TOKEN>
 NOTION_DATABASE_ID=2fa95c292b0e80b0a5b0f6a3d20b64f1
 ```
 

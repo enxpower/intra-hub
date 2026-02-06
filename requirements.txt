@@ -1,0 +1,18 @@
+# INTRA-HUB v1.0 - Python Dependencies
+# Install with: pip install -r requirements.txt
+
+# Notion API client
+notion-client==2.2.1
+
+# Barcode generation
+python-barcode[images]==0.15.1
+Pillow>=10.0.0
+
+# Environment variables
+python-dotenv==1.0.0
+
+# HTTP requests (for future features)
+requests>=2.31.0
+
+# Scheduler management (optional, for programmatic cron)
+python-crontab==3.0.0

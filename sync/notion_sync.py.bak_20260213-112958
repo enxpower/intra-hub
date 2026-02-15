@@ -65,8 +65,8 @@ class NotionSync:
             json.dump(mapping, f, indent=2)
     
     def generate_doc_id(self, counter: int) -> str:
-        """Generate document ID in format DOC-NNNNNN (6 digits)"""
-        return f"DOC-{counter:06d}"
+        """Generate document ID in format DOC-NNNN"""
+        return f"DOC-{counter:04d}"
     
     def extract_property_value(self, prop: Dict[str, Any]) -> Optional[str]:
         """Extract value from Notion property based on type"""
@@ -149,7 +149,7 @@ class NotionSync:
             logger.error(f"Failed to update DOC_ID for page {page_id}: {e}")
     
     def process_pages(self, pages: List[Dict]) -> Dict[str, Any]:
-        """Process pages and assign document numbers (6-digit format)"""
+        """Process pages and assign document numbers"""
         counter = self.load_counter()
         doc_mapping = self.load_doc_mapping()
         
@@ -170,7 +170,7 @@ class NotionSync:
                 
                 # Assign DOC_ID if not present
                 if page_id not in doc_mapping and not existing_doc_id:
-                    # First publication - assign new DOC_ID (6 digits)
+                    # First publication - assign new DOC_ID
                     counter += 1
                     doc_id = self.generate_doc_id(counter)
                     doc_mapping[page_id] = doc_id
@@ -180,7 +180,7 @@ class NotionSync:
                 elif existing_doc_id and page_id not in doc_mapping:
                     # Notion has DOC_ID but local mapping doesn't - sync from Notion
                     doc_mapping[page_id] = existing_doc_id
-                    # Extract counter from DOC_ID (6 digits)
+                    # Extract counter from DOC_ID
                     try:
                         doc_num = int(existing_doc_id.split('-')[1])
                         counter = max(counter, doc_num)
@@ -326,7 +326,7 @@ def main():
         # Step 1: Fetch all pages
         pages = syncer.fetch_all_pages()
         
-        # Step 2: Process and assign DOC_IDs (6-digit format)
+        # Step 2: Process and assign DOC_IDs
         result = syncer.process_pages(pages)
         
         # Step 3: Fetch full content for published docs

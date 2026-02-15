@@ -45,20 +45,18 @@ def create_backup():
         # Backup critical directories
         subprocess.run([
             'tar', 'czf', str(backup_file),
-            '--exclude=*.pyc',
-            '--exclude=__pycache__',
             '-C', '/opt/intra-hub-v1.0',
-            'public', 'data', 'renderer', 'sync'
+            'public', 'data', 'renderer', 'sync',
+            '--exclude=*.pyc',
+            '--exclude=__pycache__'
         ], check=True)
         
         logger.info(f"Backup created: {backup_file}")
         
-        # Keep only last N backups
-        KEEP_N = 30
+        # Keep only last 7 backups
         backups = sorted(backup_dir.glob('intra-hub_fullbackup_*.tgz'))
-        logger.info(f"Keeping latest {KEEP_N} backups (current: {len(backups)})")
-        if len(backups) > KEEP_N:
-            for old_backup in backups[:-KEEP_N]:
+        if len(backups) > 7:
+            for old_backup in backups[:-7]:
                 old_backup.unlink()
                 logger.info(f"Removed old backup: {old_backup}")
                 

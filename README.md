@@ -80,29 +80,29 @@ sudo ./setup.sh
 ### 5. 配置环境变量
 
 ```bash
-sudo nano /opt/intra-hub/.env
+sudo nano /opt/intra-hub-v1.0/.env
 ```
 
 填入你的 Notion 凭证：
 
 ```
-NOTION_TOKEN=<YOUR_NOTION_TOKEN>
+NOTION_TOKEN=secret_xxxxxxxxxxxxx
 NOTION_DATABASE_ID=2fa95c292b0e80b0a5b0f6a3d20b64f1
 ```
 
 ### 6. 复制代码文件
 
 ```bash
-sudo cp -r ~/intra-hub-v1.0/sync /opt/intra-hub/
-sudo cp -r ~/intra-hub-v1.0/renderer /opt/intra-hub/
-sudo cp ~/intra-hub-v1.0/requirements.txt /opt/intra-hub/
-sudo cp ~/intra-hub-v1.0/install_scheduler.sh /opt/intra-hub/
+sudo cp -r ~/intra-hub-v1.0/sync /opt/intra-hub-v1.0/
+sudo cp -r ~/intra-hub-v1.0/renderer /opt/intra-hub-v1.0/
+sudo cp ~/intra-hub-v1.0/requirements.txt /opt/intra-hub-v1.0/
+sudo cp ~/intra-hub-v1.0/install_scheduler.sh /opt/intra-hub-v1.0/
 ```
 
 ### 7. 安装 Python 依赖
 
 ```bash
-cd /opt/intra-hub
+cd /opt/intra-hub-v1.0
 source venv/bin/activate
 pip install -r requirements.txt
 ```
@@ -119,7 +119,7 @@ sudo systemctl reload nginx
 ### 9. 安装定时任务
 
 ```bash
-cd /opt/intra-hub
+cd /opt/intra-hub-v1.0
 sudo ./install_scheduler.sh
 ```
 
@@ -162,8 +162,8 @@ sudo systemctl start intra-hub-sync.service
 sudo journalctl -u intra-hub-sync.service -f
 
 # 历史日志
-sudo tail -f /opt/intra-hub/logs/sync.log
-sudo tail -f /opt/intra-hub/logs/main.log
+sudo tail -f /opt/intra-hub-v1.0/logs/sync.log
+sudo tail -f /opt/intra-hub-v1.0/logs/main.log
 ```
 
 ### 访问内网站点
@@ -183,7 +183,7 @@ http://YOUR_SERVER_IP
 ## 目录结构
 
 ```
-/opt/intra-hub/
+/opt/intra-hub-v1.0/
 ├── sync/                 # Notion 同步模块
 │   ├── notion_sync.py
 │   └── main.py
@@ -227,15 +227,15 @@ http://YOUR_SERVER_IP
 
 ```bash
 # 检查环境变量
-sudo cat /opt/intra-hub/.env
+sudo cat /opt/intra-hub-v1.0/.env
 
 # 检查 Notion 连接
-cd /opt/intra-hub
+cd /opt/intra-hub-v1.0
 source venv/bin/activate
 python -c "from notion_client import Client; print('OK')"
 
 # 手动测试同步
-sudo -u www-data /opt/intra-hub/venv/bin/python /opt/intra-hub/sync/main.py
+sudo -u www-data /opt/intra-hub-v1.0/venv/bin/python /opt/intra-hub-v1.0/sync/main.py
 ```
 
 ### 问题：定时任务未运行
@@ -258,11 +258,11 @@ sudo systemctl restart intra-hub-sync.timer
 sudo nginx -t
 
 # 检查文件权限
-ls -la /opt/intra-hub/public/
+ls -la /opt/intra-hub-v1.0/public/
 
 # 修复权限
-sudo chown -R www-data:www-data /opt/intra-hub/public/
-sudo chmod -R 755 /opt/intra-hub/public/
+sudo chown -R www-data:www-data /opt/intra-hub-v1.0/public/
+sudo chmod -R 755 /opt/intra-hub-v1.0/public/
 ```
 
 ### 问题：文档编号未写回 Notion
@@ -279,7 +279,7 @@ sudo chmod -R 755 /opt/intra-hub/public/
 
 系统每次同步前自动创建备份：
 ```
-/opt/intra-hub/backups/intra-hub_fullbackup_YYYYMMDD-HHMMSS.tgz
+/opt/intra-hub-v1.0/backups/intra-hub_fullbackup_YYYYMMDD-HHMMSS.tgz
 ```
 
 保留最近 7 个备份。
@@ -287,9 +287,9 @@ sudo chmod -R 755 /opt/intra-hub/public/
 ### 手动恢复
 
 ```bash
-cd /opt/intra-hub/backups
+cd /opt/intra-hub-v1.0/backups
 tar -tzf intra-hub_fullbackup_YYYYMMDD-HHMMSS.tgz  # 查看内容
-tar -xzf intra-hub_fullbackup_YYYYMMDD-HHMMSS.tgz -C /opt/intra-hub/  # 恢复
+tar -xzf intra-hub_fullbackup_YYYYMMDD-HHMMSS.tgz -C /opt/intra-hub-v1.0/  # 恢复
 ```
 
 ---
@@ -312,11 +312,11 @@ sudo systemctl enable intra-hub-sync.timer
 sudo systemctl start intra-hub-sync.timer
 
 # 清理旧备份（保留最近5个）
-cd /opt/intra-hub/backups
+cd /opt/intra-hub-v1.0/backups
 ls -t intra-hub_fullbackup_*.tgz | tail -n +6 | xargs rm -f
 
 # 查看磁盘使用
-du -sh /opt/intra-hub/*
+du -sh /opt/intra-hub-v1.0/*
 ```
 
 ---
@@ -326,7 +326,7 @@ du -sh /opt/intra-hub/*
 1. ⚠️ **内网访问专用** - 确保服务器只能通过 VPN/内网访问
 2. ⚠️ **保护 .env 文件** - 包含敏感凭证，权限设为 600
 3. ⚠️ **定期备份** - 系统自动备份，但建议异地备份重要数据
-4. ⚠️ **监控日志** - 定期检查 `/opt/intra-hub/logs/` 中的错误
+4. ⚠️ **监控日志** - 定期检查 `/opt/intra-hub-v1.0/logs/` 中的错误
 
 ---
 
@@ -360,7 +360,7 @@ Internal Use Only - Proprietary
 
 遇到问题？
 
-1. 查看日志：`/opt/intra-hub/logs/`
+1. 查看日志：`/opt/intra-hub-v1.0/logs/`
 2. 检查故障排除章节
 3. 联系系统管理员
 

@@ -17,7 +17,7 @@ class BarcodeGenerator:
     """Generate Code128 barcodes for document IDs"""
     
     def __init__(self):
-        self.output_dir = Path('/opt/intra-hub/public/static/barcodes')
+        self.output_dir = Path('/opt/intra-hub-v1.0/public/static/barcodes')
         self.output_dir.mkdir(parents=True, exist_ok=True)
     
     def generate_barcode_base64(self, doc_id: str) -> str:

@@ -13,7 +13,7 @@ if [ "$EUID" -ne 0 ]; then
 fi
 
 # Create base directory
-BASE_DIR="/opt/intra-hub"
+BASE_DIR="/opt/intra-hub-v1.0"
 echo "Creating directory structure at $BASE_DIR..."
 
 mkdir -p "$BASE_DIR"/{sync,renderer,data,public,logs,backups}

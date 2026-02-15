@@ -21,11 +21,11 @@ After=network.target
 Type=oneshot
 User=www-data
 Group=www-data
-WorkingDirectory=/opt/intra-hub
-Environment="PATH=/opt/intra-hub/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
-ExecStart=/opt/intra-hub/venv/bin/python /opt/intra-hub/sync/main.py
-StandardOutput=append:/opt/intra-hub/logs/scheduler.log
-StandardError=append:/opt/intra-hub/logs/scheduler.log
+WorkingDirectory=/opt/intra-hub-v1.0
+Environment="PATH=/opt/intra-hub-v1.0/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+ExecStart=/opt/intra-hub-v1.0/venv/bin/python /opt/intra-hub-v1.0/sync/main.py
+StandardOutput=append:/opt/intra-hub-v1.0/logs/scheduler.log
+StandardError=append:/opt/intra-hub-v1.0/logs/scheduler.log
 EOF
 
 # Create systemd timer file

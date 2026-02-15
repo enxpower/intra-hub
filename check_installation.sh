@@ -33,34 +33,34 @@ fi
 echo ""
 echo "--- Directory Structure ---"
 
-if [ -d "/opt/intra-hub" ]; then
-    check_ok "/opt/intra-hub exists"
+if [ -d "/opt/intra-hub-v1.0" ]; then
+    check_ok "/opt/intra-hub-v1.0 exists"
     
     for dir in sync renderer data public logs backups; do
-        if [ -d "/opt/intra-hub/$dir" ]; then
-            check_ok "/opt/intra-hub/$dir exists"
+        if [ -d "/opt/intra-hub-v1.0/$dir" ]; then
+            check_ok "/opt/intra-hub-v1.0/$dir exists"
         else
-            check_fail "/opt/intra-hub/$dir missing"
+            check_fail "/opt/intra-hub-v1.0/$dir missing"
         fi
     done
 else
-    check_fail "/opt/intra-hub does not exist"
+    check_fail "/opt/intra-hub-v1.0 does not exist"
 fi
 
 echo ""
 echo "--- Python Environment ---"
 
-if [ -d "/opt/intra-hub/venv" ]; then
+if [ -d "/opt/intra-hub-v1.0/venv" ]; then
     check_ok "Virtual environment exists"
     
-    if [ -f "/opt/intra-hub/venv/bin/python" ]; then
-        PYTHON_VERSION=$(/opt/intra-hub/venv/bin/python --version 2>&1)
+    if [ -f "/opt/intra-hub-v1.0/venv/bin/python" ]; then
+        PYTHON_VERSION=$(/opt/intra-hub-v1.0/venv/bin/python --version 2>&1)
         check_ok "Python: $PYTHON_VERSION"
     fi
     
     # Check key packages
     for pkg in notion-client barcode dotenv; do
-        if /opt/intra-hub/venv/bin/python -c "import ${pkg//-/_}" 2>/dev/null; then
+        if /opt/intra-hub-v1.0/venv/bin/python -c "import ${pkg//-/_}" 2>/dev/null; then
             check_ok "Package installed: $pkg"
         else
             check_fail "Package missing: $pkg"
@@ -73,18 +73,18 @@ fi
 echo ""
 echo "--- Configuration ---"
 
-if [ -f "/opt/intra-hub/.env" ]; then
+if [ -f "/opt/intra-hub-v1.0/.env" ]; then
     check_ok ".env file exists"
     
     # Check if credentials are set (without revealing them)
-    if grep -q "NOTION_TOKEN=secret_" /opt/intra-hub/.env || \
-       grep -q "NOTION_TOKEN=your_" /opt/intra-hub/.env; then
+    if grep -q "NOTION_TOKEN=secret_" /opt/intra-hub-v1.0/.env || \
+       grep -q "NOTION_TOKEN=your_" /opt/intra-hub-v1.0/.env; then
         check_warn "NOTION_TOKEN appears to be template value"
     else
         check_ok "NOTION_TOKEN is set"
     fi
     
-    if grep -q "NOTION_DATABASE_ID=2fa95c292b0e80b0a5b0f6a3d20b64f1" /opt/intra-hub/.env; then
+    if grep -q "NOTION_DATABASE_ID=2fa95c292b0e80b0a5b0f6a3d20b64f1" /opt/intra-hub-v1.0/.env; then
         check_ok "NOTION_DATABASE_ID is set"
     else
         check_warn "NOTION_DATABASE_ID may need verification"
@@ -148,8 +148,8 @@ fi
 echo ""
 echo "--- File Permissions ---"
 
-if [ -d "/opt/intra-hub/public" ]; then
-    PUBLIC_OWNER=$(stat -c '%U:%G' /opt/intra-hub/public 2>/dev/null || stat -f '%Su:%Sg' /opt/intra-hub/public 2>/dev/null)
+if [ -d "/opt/intra-hub-v1.0/public" ]; then
+    PUBLIC_OWNER=$(stat -c '%U:%G' /opt/intra-hub-v1.0/public 2>/dev/null || stat -f '%Su:%Sg' /opt/intra-hub-v1.0/public 2>/dev/null)
     if [ "$PUBLIC_OWNER" = "www-data:www-data" ]; then
         check_ok "public/ owned by www-data"
     else
@@ -157,8 +157,8 @@ if [ -d "/opt/intra-hub/public" ]; then
     fi
 fi
 
-if [ -f "/opt/intra-hub/.env" ]; then
-    ENV_PERMS=$(stat -c '%a' /opt/intra-hub/.env 2>/dev/null || stat -f '%A' /opt/intra-hub/.env 2>/dev/null)
+if [ -f "/opt/intra-hub-v1.0/.env" ]; then
+    ENV_PERMS=$(stat -c '%a' /opt/intra-hub-v1.0/.env 2>/dev/null || stat -f '%A' /opt/intra-hub-v1.0/.env 2>/dev/null)
     if [ "$ENV_PERMS" = "600" ]; then
         check_ok ".env permissions: 600"
     else
@@ -169,7 +169,7 @@ fi
 echo ""
 echo "--- Test Sync (Dry Run) ---"
 
-if [ -f "/opt/intra-hub/.env" ] && [ -x "/opt/intra-hub/venv/bin/python" ]; then
+if [ -f "/opt/intra-hub-v1.0/.env" ] && [ -x "/opt/intra-hub-v1.0/venv/bin/python" ]; then
     echo "Testing Notion connection..."
     
     # Create minimal test script
@@ -178,7 +178,7 @@ import os
 import sys
 from dotenv import load_dotenv
 
-load_dotenv('/opt/intra-hub/.env')
+load_dotenv('/opt/intra-hub-v1.0/.env')
 token = os.getenv('NOTION_TOKEN')
 db_id = os.getenv('NOTION_DATABASE_ID')
 
@@ -198,7 +198,7 @@ except Exception as e:
     sys.exit(1)
 EOFPYTHON
     
-    if /opt/intra-hub/venv/bin/python /tmp/test_notion.py; then
+    if /opt/intra-hub-v1.0/venv/bin/python /tmp/test_notion.py; then
         check_ok "Notion connection test passed"
     else
         check_fail "Notion connection test failed"

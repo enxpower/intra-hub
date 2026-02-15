@@ -31,13 +31,14 @@ class NotionBlockRenderer:
             
             # Apply formatting
             if annotations.get('code'):
-                # For inline code: escape HTML but don't convert newlines
+                # For inline code: escape HTML but don't convert newlines to <br>
+                # Keep newlines as-is for code
                 content = f'<code>{self._escape_html(content)}</code>'
             else:
-                # For blockquotes/callouts, optionally preserve newlines as literal text
+                # For blockquotes/callouts, optionally preserve newlines as literal text (no <br>)
                 if not preserve_newlines_as_text:
-                    # Convert newlines to <br> for normal text
-                    content = content.replace('\n', '<br>')
+                    content = content.replace('
+', '<br>')
                 
                 if annotations.get('bold'):
                     content = f'<strong>{content}</strong>'
@@ -90,9 +91,9 @@ class NotionBlockRenderer:
             elif block_type == 'code':
                 return self._render_code(block_data)
             elif block_type == 'quote':
-                return self._render_quote(block)
+                return self._render_quote(block_data)
             elif block_type == 'callout':
-                return self._render_callout(block)
+                return self._render_callout(block_data)
             elif block_type == 'divider':
                 return '<hr class="divider" />'
             elif block_type == 'table':
@@ -143,64 +144,35 @@ class NotionBlockRenderer:
     
     def _render_code(self, data: Dict) -> str:
         """Render code block - Notion style, no language label"""
-        # Get raw text without any HTML conversion
-        raw_text = ''
-        for text_obj in data.get('rich_text', []):
-            raw_text += text_obj.get('plain_text', '')
-        
+        code_text = self.render_rich_text(data.get('rich_text', []))
         language = data.get('language', 'plaintext')
         
-        # Escape HTML but preserve newlines
-        escaped_code = self._escape_html(raw_text)
+        # Fully escape code content
+        escaped_code = self._escape_html(code_text)
         
         # Notion-style code block with light background - NO language header
         return f'''<div class="code-block">
 <pre><code class="language-{language}">{escaped_code}</code></pre>
 </div>'''
-    def _render_quote(self, block: Dict) -> str:
-        """Render quote block (supports multiline and children)."""
-        data = block.get('quote', {}) or {}
+    
+    def _render_quote(self, data: Dict) -> str:
+        """Render quote block"""
         text = self.render_rich_text(data.get('rich_text', []), preserve_newlines_as_text=True)
-
-        # Children: Notion turns "Enter" inside quote into child blocks
-        children_html = []
-        for child in block.get('children', []) or []:
-            try:
-                children_html.append(self.render_block(child))
-            except Exception as e:
-                logger.error(f"Error rendering quote child block: {e}")
-        children = ''.join(children_html)
-
-        title_html = ''
-        if text:
-            title_html = f'<pre style="white-space: pre-wrap; font-family: inherit; margin: 0;">{text}</pre>'
-
-        return f'<blockquote>{title_html}{children}</blockquote>'
-    def _render_callout(self, block: Dict) -> str:
-        """Render callout block (supports multiline and children)."""
-        data = block.get('callout', {}) or {}
+        # Wrap in <pre> to preserve whitespace and newlines
+        return f'<blockquote><pre style="white-space: pre-wrap; font-family: inherit; margin: 0;">{text}</pre></blockquote>'
+    
+    def _render_callout(self, data: Dict) -> str:
+        """Render callout block"""
         text = self.render_rich_text(data.get('rich_text', []), preserve_newlines_as_text=True)
-        icon = data.get('icon', {}) or {}
+        icon = data.get('icon', {})
 
         icon_html = ''
         if icon.get('type') == 'emoji':
             icon_html = f'<span class="callout-icon">{icon.get("emoji", "💡")}</span>'
 
-        # Children: Notion turns "Enter" inside callout into child blocks
-        children_html = []
-        for child in block.get('children', []) or []:
-            try:
-                children_html.append(self.render_block(child))
-            except Exception as e:
-                logger.error(f"Error rendering callout child block: {e}")
-        children = ''.join(children_html)
-
-        title_html = ''
-        if text:
-            title_html = f'<pre style="white-space: pre-wrap; font-family: inherit; margin: 0;">{text}</pre>'
-
-        return f'<div class="callout">{icon_html}<div class="callout-content">{title_html}{children}</div></div>'
-
+        # Wrap in <pre> to preserve whitespace and newlines
+        return f'<div class="callout">{icon_html}<div class="callout-content"><pre style="white-space: pre-wrap; font-family: inherit; margin: 0;">{text}</pre></div></div>'
+    
     def _render_table(self, block: Dict) -> str:
         """Render table block with full support for child table_row blocks"""
         table_data = block.get('table', {})

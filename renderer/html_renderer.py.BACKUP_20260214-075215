@@ -599,8 +599,6 @@ body {
     margin: 1.5em 0;
     color: #7f8c8d;
     font-style: italic;
-    white-space: pre-wrap;
-    word-break: break-word;
 }
 
 .document-content code {
@@ -657,8 +655,6 @@ body {
 
 .callout-content {
     flex: 1;
-    white-space: pre-wrap;
-    word-break: break-word;
 }
 
 /* 表格 */

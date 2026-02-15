@@ -1,0 +1,3444 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ch62  - INTRA-HUB</title>
+    <style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+
+/* 搜索容器 */
+.search-container {
+    max-width: 1400px;
+    margin: 0 auto 15px;
+    background: white;
+    padding: 20px 30px;
+    border-radius: 12px 12px 0 0;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    position: relative;
+}
+
+.search-input {
+    width: 100%;
+    padding: 14px 45px 14px 20px;
+    font-size: 15px;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 8px;
+    outline: none;
+    transition: all 0.3s ease;
+    font-family: inherit;
+    color: #2c3e50;
+}
+
+.search-input:focus {
+    border-color: #3498db;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+.search-input::placeholder {
+    color: #95a5a6;
+}
+
+.search-icon {
+    position: absolute;
+    right: 45px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 18px;
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.search-results {
+    position: absolute;
+    top: 100%;
+    right: 30px;
+    font-size: 13px;
+    color: #7f8c8d;
+    padding: 8px 0;
+}
+
+/* 高亮匹配行 */
+.doc-table tbody tr.hidden {
+    display: none;
+}
+
+.doc-table tbody tr.match {
+    background: #e8f4fd !important;
+}
+
+/* 移动端搜索 */
+@media (max-width: 768px) {
+    .search-container {
+        padding: 15px 20px;
+        border-radius: 8px 8px 0 0;
+    }
+    
+    .search-input {
+        padding: 12px 40px 12px 16px;
+        font-size: 14px;
+    }
+    
+    .search-icon {
+        right: 35px;
+        font-size: 16px;
+    }
+    
+    .search-results {
+        right: 20px;
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .search-container {
+        padding: 12px 15px;
+    }
+    
+    .search-input {
+        padding: 10px 35px 10px 14px;
+        font-size: 13px;
+    }
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
+    line-height: 1.7;
+    color: #2c3e50;
+    background: #f5f7fa;
+    padding: 20px;
+}
+
+.container {
+    max-width: 900px;
+    margin: 0 auto;
+    background: white;
+    padding: 45px 50px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    border-radius: 10px;
+}
+
+/* 文档头部 */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 35px;
+    padding-bottom: 10px;
+}
+
+.header-left {
+    flex: 1;
+}
+
+.header-right {
+    margin-left: 30px;
+    text-align: right;
+    flex-shrink: 0;
+}
+
+.doc-title {
+    font-size: 2em;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-bottom: 12px;
+    line-height: 1.3;
+    letter-spacing: -0.3px;
+}
+
+.doc-id {
+    font-size: 0.9em;
+    color: #7f8c8d;
+    font-family: "SF Mono", Monaco, Consolas, "Courier New", monospace;
+    font-weight: 500;
+}
+
+/* 条形码 - 精细化 */
+.barcode {
+    max-width: 280px;
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+/* 指标栏 */
+.metrics-bar {
+    display: flex;
+    gap: 25px;
+    padding: 16px 20px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    margin-bottom: 30px;
+    font-size: 0.88em;
+    border: 1px solid #e8e8e8;
+    flex-wrap: wrap;
+}
+
+.metric {
+    color: #7f8c8d;
+}
+
+.metric strong {
+    color: #2c3e50;
+    font-weight: 600;
+}
+
+/* 文档属性 */
+.document-properties {
+    margin-bottom: 35px;
+    padding: 22px;
+    background: #f8f9fa;
+    border-left: 4px solid #3498db;
+    border-radius: 6px;
+}
+
+.document-properties h3 {
+    margin-bottom: 16px;
+    color: #3498db;
+    font-size: 1em;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.properties-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.properties-table th {
+    text-align: left;
+    padding: 10px 14px;
+    background: #e8e8e8;
+    font-weight: 600;
+    width: 140px;
+    font-size: 0.88em;
+    color: #2c3e50;
+}
+
+.properties-table td {
+    padding: 10px 14px;
+    border-bottom: 0.25px solid #e8e8e8;
+    color: #34495e;
+}
+
+.properties-table tr:last-child td {
+    border-bottom: none;
+}
+
+/* 文档内容 */
+.document-content {
+    line-height: 1.8;
+    font-size: 16px;
+    color: #34495e;
+}
+
+.document-content p {
+    margin-bottom: 1.2em;
+}
+
+.document-content h1,
+.document-content h2,
+.document-content h3 {
+    margin-top: 1.8em;
+    margin-bottom: 0.6em;
+    font-weight: 600;
+    color: #2c3e50;
+    line-height: 1.3;
+}
+
+.document-content h1 { 
+    font-size: 1.8em;
+    border-bottom: 0.25px solid #e0e0e0;
+    padding-bottom: 0.3em;
+}
+
+.document-content h2 { 
+    font-size: 1.5em;
+}
+
+.document-content h3 { 
+    font-size: 1.25em;
+    color: #34495e;
+}
+
+.document-content ul,
+.document-content ol {
+    margin-left: 1.8em;
+    margin-bottom: 1.2em;
+}
+
+.document-content li {
+    margin-bottom: 0.5em;
+}
+
+.document-content blockquote {
+    border-left: 4px solid #e0e0e0;
+    padding-left: 20px;
+    margin: 1.5em 0;
+    color: #7f8c8d;
+    font-style: italic;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.document-content code {
+    background: #f5f5f5;
+    padding: 3px 6px;
+    border-radius: 3px;
+    font-family: "SF Mono", Monaco, Consolas, "Courier New", monospace;
+    font-size: 0.88em;
+    color: #e74c3c;
+}
+
+/* 代码块 - 去除语言标签，Notion 风格 */
+.code-block {
+    margin: 1.8em 0;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid #e0e0e0;
+    background: #f7f7f7;
+}
+
+.code-block pre {
+    background: #f7f7f7;
+    color: #2c3e50;
+    padding: 20px 24px;
+    overflow-x: auto;
+    margin: 0;
+    font-family: "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace;
+    font-size: 0.88em;
+    line-height: 1.6;
+}
+
+.code-block code {
+    background: transparent;
+    color: inherit;
+    padding: 0;
+    border-radius: 0;
+}
+
+/* Callout */
+.callout {
+    display: flex;
+    gap: 14px;
+    padding: 18px;
+    margin: 1.5em 0;
+    background: #e8f4fd;
+    border-radius: 8px;
+    border-left: 4px solid #3498db;
+}
+
+.callout-icon {
+    font-size: 1.4em;
+    flex-shrink: 0;
+}
+
+.callout-content {
+    flex: 1;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+/* 表格 */
+.table-wrapper {
+    overflow-x: auto;
+    margin: 1.8em 0;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+}
+
+.notion-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.92em;
+}
+
+.notion-table th,
+.notion-table td {
+    padding: 12px 14px;
+    border: 1px solid #e8e8e8;
+    text-align: left;
+}
+
+.notion-table thead th {
+    background: #f8f9fa;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.notion-table tbody th {
+    background: #fafafa;
+    font-weight: 600;
+}
+
+.notion-table tbody tr:hover {
+    background: #f8f9fa;
+}
+
+.table-placeholder {
+    text-align: center;
+    padding: 50px 20px !important;
+    color: #bdc3c7;
+    font-style: italic;
+}
+
+/* 图片 */
+.image-block {
+    margin: 1.8em 0;
+    text-align: center;
+}
+
+.image-block img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.image-block figcaption {
+    margin-top: 12px;
+    font-size: 0.88em;
+    color: #7f8c8d;
+    font-style: italic;
+}
+
+/* 文件下载 */
+.file-download {
+    margin: 1.2em 0;
+    padding: 16px 18px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    border: 1px solid #e8e8e8;
+}
+
+.download-link {
+    color: #3498db;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s ease;
+}
+
+.download-link:hover {
+    color: #2980b9;
+    text-decoration: underline;
+}
+
+/* TODO 项 */
+.todo-item {
+    margin: 0.6em 0;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+}
+
+.todo-item.checked {
+    color: #95a5a6;
+    text-decoration: line-through;
+}
+
+.checkbox {
+    flex-shrink: 0;
+    font-size: 1.1em;
+}
+
+/* 数学公式 */
+.equation {
+    margin: 1.8em 0;
+    padding: 25px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    text-align: center;
+    overflow-x: auto;
+    font-size: 1.05em;
+    border: 1px solid #e8e8e8;
+}
+
+/* 未知块 */
+.unknown-block {
+    padding: 12px;
+    margin: 1.2em 0;
+    background: #fff3cd;
+    border-left: 4px solid #ffc107;
+    border-radius: 6px;
+    font-size: 0.9em;
+}
+
+/* 渲染错误 */
+.render-error {
+    padding: 16px;
+    background: #fee;
+    border-left: 4px solid #e74c3c;
+    border-radius: 6px;
+    color: #c0392b;
+    margin: 1.2em 0;
+}
+
+/* 页脚 */
+.footer {
+    margin-top: 50px;
+    padding-top: 25px;
+    border-top: 0.25px solid #e8e8e8;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.back-link {
+    color: #3498db;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s ease;
+}
+
+.back-link:hover {
+    color: #2980b9;
+}
+
+.timestamp {
+    font-size: 0.85em;
+    color: #95a5a6;
+}
+
+/* ========== 移动端适配 ========== */
+
+@media (max-width: 768px) {
+    .doc-title a {
+        max-width: 250px;
+    }
+    
+    body {
+        padding: 10px;
+    }
+    
+    .container {
+        padding: 25px 20px;
+        border-radius: 8px;
+    }
+    
+    .header {
+        flex-direction: column;
+        gap: 20px;
+    }
+    
+    .header-right {
+        margin-left: 0;
+        text-align: center;
+        width: 100%;
+    }
+    
+    .barcode {
+        margin: 0 auto;
+        max-width: 240px;
+    }
+    
+    .doc-title {
+        font-size: 1.6em;
+    }
+    
+    .metrics-bar {
+        gap: 15px;
+        padding: 14px 16px;
+        font-size: 0.85em;
+    }
+    
+    .document-properties {
+        padding: 18px;
+    }
+    
+    .properties-table th {
+        width: 100px;
+        font-size: 0.82em;
+    }
+    
+    .properties-table th,
+    .properties-table td {
+        padding: 8px 10px;
+    }
+    
+    .document-content {
+        font-size: 15px;
+    }
+    
+    .document-content h1 {
+        font-size: 1.5em;
+    }
+    
+    .document-content h2 {
+        font-size: 1.3em;
+    }
+    
+    .document-content h3 {
+        font-size: 1.15em;
+    }
+    
+    .code-block pre {
+        padding: 16px 18px;
+        font-size: 0.82em;
+    }
+    
+    .table-wrapper {
+        margin-left: -20px;
+        margin-right: -20px;
+        border-radius: 0;
+        border-left: none;
+        border-right: none;
+    }
+    
+    .notion-table {
+        font-size: 0.85em;
+    }
+    
+    .notion-table th,
+    .notion-table td {
+        padding: 10px 8px;
+    }
+    
+    .footer {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .container {
+        padding: 20px 15px;
+    }
+    
+    .doc-title {
+        font-size: 1.4em;
+    }
+    
+    .metrics-bar {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .document-content {
+        font-size: 14px;
+    }
+    
+    .code-block pre {
+        font-size: 0.78em;
+        padding: 14px;
+    }
+}
+
+/* 打印样式 */
+@media print {
+    body {
+        background: white;
+        padding: 0;
+    }
+    
+    .container {
+        box-shadow: none;
+        padding: 20px;
+        max-width: 100%;
+    }
+    
+    .metrics-bar,
+    .footer {
+        display: none;
+    }
+    
+    .barcode {
+        max-width: 200px;
+    }
+}
+</style>
+
+    <!-- KaTeX for mathematical equations -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" integrity="sha384-n8MVd4RsNIU0tAv4ct0nTaAbDJwPJzDEaqSD1odI+WdtXRGWt2kTvGFasHpSy3SV" crossorigin="anonymous">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" integrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0l8" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"
+        onload="renderMathInElement(document.body, {
+            delimiters: [
+                { left: '$$', right: '$$', display: true },
+                { left: '$',  right: '$',  display: false }
+            ]
+        });"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-left">
+                <h1 class="doc-title">Ch62 </h1>
+                <div class="doc-id">Document ID: DOC-2027</div>
+            </div>
+            <div class="header-right">
+                <img src="data:image/png;base64,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" alt="Barcode: DOC-2027" class="barcode" />
+            </div>
+        </div>
+
+        <div class="metrics-bar">
+            <span class="metric"><strong>Views:</strong> 0</span>
+            <span class="metric"><strong>Downloads:</strong> 0</span>
+            <span class="metric"><strong>Shares:</strong> 0</span>
+        </div>
+
+        
+
+        <div class="document-content">
+            <h2>Grid-Connected ↔ Islanded ↔ Grid-Connected Control Framework</h2>
+<blockquote><pre style="white-space: pre-wrap; font-family: inherit; margin: 0;">从电气工程与微电网系统工程的角度出发，本系统的设计目标是实现一套具备并网运行与离网运行能力、且能够在电网异常与恢复过程中安全、可控切换的微电网控制系统。</pre><p>在并网运行状态下，微电网通过 PCC 主断路器与公共电网保持物理连接。当防孤岛继电器检测到电网侧发生电压、频率或相位异常时，继电器作为一次保护装置，在毫秒级时间尺度内直接操作 PCC 主断路器的跳闸线圈，使微电网与主电网实现物理解列，系统进入离网状态。</p><p>PCC 主断路器的分合位状态通过 52a / 52b 辅助触点反馈至 EMS。EMS 在接收到电网异常信号后，必须对 52a / 52b 状态进行闭环核查：若确认断路器已成功跳闸，则记录事件并进入离网接管流程；若在规定时间窗口内未确认断路器解列，EMS 将通过 DO1 输出执行冗余补跳，以确保并网点物理解列。该继电器主跳加 EMS 补跳的结构，构成微电网系统中常用的冗余解列保护机制。</p><p>在系统完成物理解列后，EMS 进入离网接管流程。EMS 根据系统配置向 BESS 下发离网构网运行许可，由 PCS 本地控制器建立离网母线的电压与频率基准，并承担初始负荷供电任务。与此同时，EMS 持续监测 BESS 的 SOC 状态。当 SOC 下降至预设阈值时，EMS 将启动柴油发电机系统。柴油机完成启动与暖机后并联至离网母线，与 BESS 进行功率分担，其多余出力可用于补充 BESS 电量，以支持离网长时运行。</p><p>在整个并网切换至离网运行的过程中，UPS 的作用仅限于保障防孤岛继电器、EMS、PLC 及控制回路的持续供电，确保保护与控制链路在电网失电瞬间不中断。UPS 不参与微电网负载供电，关键负载的连续供电由 BESS、柴油机或独立的应急供电系统负责。</p><p>当公共电网恢复供电后，电网侧状态将通过防孤岛继电器与并网计量装置等多源感知路径反馈至 EMS。EMS 不会立即执行合闸或停止本地电源，而是进入回并网准备状态，对电网稳定性、离网系统稳定性及各项并网安全许可条件进行综合评估。在满足全部合闸许可条件后，EMS 作为唯一合法合闸授权方，通过合闸控制输出向 PCC 主断路器发出合闸指令，完成微电网与主电网的重新并联。</p><p>合闸完成后，系统进入并网后退坡与稳态恢复阶段。BESS 将逐步退出构网控制并转入并网跟随模式；柴油机根据并网稳定性与运行策略执行卸载并停机或进入备用状态。最终，微电网恢复至正常并网运行模式。</p></blockquote>
+<hr class="divider" />
+<h3>并网 → 离网（Grid Loss）</h3>
+<ol><li>SEL-700G 判定越限 → 直接跳闸主断（最高优先级、独立于EMS）</li><li>EMS 接收（SEL状态 + 电表冗余状态）进入事件处理</li><li>EMS 读取 DI1/DI2（52a/52b）确认是否已解列，并写日志</li><li>若未解列：EMS DO1 补跳，进入告警/锁定策略</li><li>解列确认后：执行离网接管（BESS构网、负载管理、必要时DG启动并联、PV策略）</li></ol>
+<h3>离网 → 并网（Grid Restore）</h3>
+<ol><li>双源确认电网恢复（SEL + 电表）</li><li>EMS 进入回并网准备，执行 C1–C7 合闸许可（合闸仅EMS）</li><li>选择切换方式（推荐闭合过渡）：维持母线、同步条件满足后 EMS DO2 合闸</li><li>读取52a/52b确认合闸闭环，记录日志</li><li>并网后资源退坡：BESS转并网策略；DG按卸载/冷却规则停机或待命</li></ol>
+<p class="empty-paragraph">&nbsp;</p>
+<div class="code-block">
+<pre><code class="language-javascript">并–离–并控制总章
+├─ Grid-Connected ↔ Islanded ↔ Grid-Connected Control Framework
+│  └─（工程级总框架 · 状态机导向）
+│
+├─ 0. 总体设计原则与系统边界
+│  ├─ 0.1 控制与保护职责边界
+│  │  ├─ 防孤岛继电器（Primary Protection）
+│  │  ├─ EMS（Supervisory Control &amp; Strategy）
+│  │  └─ 本地控制器 / PCS / DG Controller
+│  │
+│  ├─ 0.2 跳闸与合闸控制权定义
+│  │  ├─ Trip：继电器主路径 + EMS 冗余补跳
+│  │  ├─ Close：EMS 唯一授权路径
+│  │  └─ 禁止任何非 EMS 合闸路径
+│  │
+│  ├─ 0.3 PCC 主断路器 I/O 统一定义
+│  │  ├─ DO1：Trip（Shunt Trip Coil）
+│  │  ├─ DO2：Close（Close Coil）
+│  │  ├─ DI1：52a（合位反馈）
+│  │  └─ DI2：52b（分位反馈）
+│  │
+│  ├─ 0.4 供电与可靠性边界
+│  │  ├─ AIPP UPS（保护电源）
+│  │  ├─ ECP UPS（控制电源）
+│  │  └─ UPS 不参与能量供给
+│  │
+│  └─ 0.5 状态机与日志原则
+│     ├─ 状态唯一、不可跳级
+│     ├─ 所有关键动作必须闭环
+│     └─ 所有并–离–并事件可审计、可回溯
+│
+├─ 1. 状态机总览
+│  ├─ S0：并网正常运行
+│  ├─ S1：电网异常判定与快速解列
+│  ├─ S2：离网接管准备
+│  ├─ S3：离网运行
+│  ├─ S4：回并网准备
+│  ├─ S5：合闸执行与闭环确认
+│  └─ S6：并网后退坡与稳态恢复
+│
+├─ 2. S0 并网正常运行
+│  ├─ 2.1 并网运行模式定义
+│  │  ├─ 电网主控频率与电压
+│  │  └─ 微电网跟随运行
+│  │
+│  ├─ 2.2 并网策略模块
+│  │  ├─ 防逆流 / 零逆流
+│  │  ├─ 需量管理
+│  │  ├─ TOU / 电价优化
+│  │  ├─ SOC 管理
+│  │  └─ 优化类策略（AI / 预测）
+│  │
+│  ├─ 2.3 并网状态监测
+│  │  ├─ PCC 状态（52a / 52b）
+│  │  ├─ 电网质量监测
+│  │  └─ 本地电源状态监测
+│  │
+│  └─ 2.4 S0 → S1 触发条件
+│     ├─ 继电器判定电网异常
+│     ├─ 计量侧电网异常
+│     └─ EMS 等效电网异常判据
+│
+├─ 3. S1 电网异常判定与快速解列
+│  ├─ 3.1 电网异常触发源
+│  │  ├─ 防孤岛继电器（主）
+│  │  ├─ 智能电表 / 冗余计量
+│  │  └─ EMS 内部判据
+│  │
+│  ├─ 3.2 主跳闸路径
+│  │  └─ 继电器直接跳闸 PCC
+│  │
+│  ├─ 3.3 EMS 闭环确认
+│  │  ├─ 52a / 52b 状态核查
+│  │  └─ 去抖与超时判断
+│  │
+│  ├─ 3.4 EMS 冗余补跳
+│  │  ├─ DO1 补跳条件
+│  │  ├─ 补跳脉冲控制
+│  │  └─ 补跳重试与锁定
+│  │
+│  ├─ 3.5 跳闸失败与危险锁定
+│  │  ├─ 拒动
+│  │  ├─ 反馈冲突
+│  │  └─ 控制电源异常
+│  │
+│  └─ 3.6 S1 → S2 转移条件
+│     └─ PCC 物理解列确认成立
+│
+├─ 4. S2 离网接管准备
+│  ├─ 4.1 PCC 解列前置确认
+│  │  ├─ 52b 成立
+│  │  └─ 反馈一致性校验
+│  │
+│  ├─ 4.2 构网资源可用性检查
+│  │  ├─ BESS / PCS 状态
+│  │  ├─ DG 可用性
+│  │  └─ 控制电源状态
+│  │
+│  ├─ 4.3 离网策略初始化
+│  │  ├─ 负载优先级策略
+│  │  ├─ 离网保护策略
+│  │  └─ 并网策略冻结
+│  │
+│  └─ 4.4 S2 → S3 转移条件
+│     ├─ 构网资源允许
+│     └─ 系统未处于锁定态
+│
+├─ 5. S3 离网运行
+│  ├─ 5.1 S3-0 离网入稳阶段
+│  │  ├─ 构网模式建立
+│  │  ├─ 电压 / 频率基准建立
+│  │  └─ 动态稳定恢复
+│  │
+│  ├─ 5.2 S3-1 BESS 主构网稳态
+│  │  ├─ Grid-Forming 控制
+│  │  ├─ 电压 / 频率调节
+│  │  └─ 动态功率支撑
+│  │
+│  ├─ 5.3 S3-2 SOC 管理与 DG 启动判据
+│  │  ├─ SOC 预警线
+│  │  ├─ SOC 保命线
+│  │  └─ 启动 / 禁止条件
+│  │
+│  ├─ 5.4 S3-3 DG 启动与暖机
+│  │  ├─ 启动流程
+│  │  ├─ 启动失败回退
+│  │  └─ 启动期间功率保障
+│  │
+│  ├─ 5.5 S3-4 DG 并联与负荷分担
+│  │  ├─ 并联方式选择
+│  │  ├─ 同步判据
+│  │  ├─ 功率 / 无功分配
+│  │  └─ 防反功率
+│  │
+│  ├─ 5.6 S3-5 离网长时运行管理
+│  │  ├─ 负载卸载与恢复
+│  │  ├─ 连续功率与热管理
+│  │  └─ 黑启动 / 二次恢复策略
+│  │
+│  ├─ 5.7 离网异常分支
+│  │  ├─ BESS 构网失败
+│  │  ├─ DG 启动 / 并联失败
+│  │  ├─ 频率 / 电压越限
+│  │  └─ 反馈异常
+│  │
+│  └─ 5.8 S3 → S4 触发条件
+│     └─ 电网恢复候选检测
+│
+├─ 6. S4 回并网准备
+│  ├─ 6.1 电网恢复感知
+│  │  ├─ 继电器侧
+│  │  └─ 计量侧
+│  │
+│  ├─ 6.2 电网稳定计时
+│  │  ├─ 稳定窗口定义
+│  │  └─ 防抖逻辑
+│  │
+│  ├─ 6.3 离网系统稳定性确认
+│  │  ├─ 母线稳定
+│  │  ├─ DG / BESS 状态收敛
+│  │  └─ 负载状态冻结
+│  │
+│  ├─ 6.4 回并网路径选择
+│  │  ├─ 闭合过渡
+│  │  └─ 开路过渡
+│  │
+│  ├─ 6.5 构网主控确认
+│  │  ├─ 并网瞬间频率 / 电压主控归属
+│  │  └─ DG / BESS 角色确认
+│  │
+│  ├─ 6.6 合闸许可准备（C1–C7）
+│  │  ├─ 条件采集
+│  │  └─ 条件冻结
+│  │
+│  └─ 6.7 S4 → S5 转移条件
+│     ├─ 所有合闸许可满足
+│     └─ 系统未锁定
+│
+├─ 7. S5 合闸执行与闭环确认
+│  ├─ 7.1 合闸前最终状态确认
+│  │  ├─ PCC 开位确认
+│  │  └─ 许可快照绑定
+│  │
+│  ├─ 7.2 DO2 合闸执行
+│  │  ├─ 脉冲参数
+│  │  └─ 中间继电器链路
+│  │
+│  ├─ 7.3 合闸反馈确认
+│  │  ├─ 52a / 52b 判据
+│  │  └─ 去抖与超时
+│  │
+│  ├─ 7.4 合闸成功处理
+│  │  ├─ PCC 状态更新
+│  │  └─ 状态机前移
+│  │
+│  ├─ 7.5 合闸失败分支
+│  │  ├─ 拒动
+│  │  ├─ 半合位
+│  │  └─ 状态异常
+│  │
+│  ├─ 7.6 合闸后瞬态异常处理
+│  │  ├─ 快速回退
+│  │  └─ 再次解列
+│  │
+│  └─ 7.7 S5 → S6 转移条件
+│     └─ 合闸闭环确认成立
+│
+├─ 8. S6 并网后退坡与稳态恢复
+│  ├─ 8.1 并网瞬态稳定观察
+│  │  ├─ 频率 / 电压
+│  │  ├─ 功率方向
+│  │  └─ 保护预警
+│  │
+│  ├─ 8.2 BESS 构网退坡
+│  │  ├─ Grid-Forming → Grid-Following
+│  │  └─ Droop 权重退坡
+│  │
+│  ├─ 8.3 DG 卸载与停机
+│  │  ├─ 卸载策略
+│  │  ├─ 冷却与停机条件
+│  │  └─ 备用策略
+│  │
+│  ├─ 8.4 PV 与并网逆变器恢复
+│  │  ├─ 斜坡限制
+│  │  └─ 防逆流校验
+│  │
+│  ├─ 8.5 并网策略逐步恢复
+│  │  ├─ 基础策略
+│  │  ├─ 稳定策略
+│  │  └─ 优化策略
+│  │
+│  ├─ 8.6 并网后异常处理
+│  │  ├─ 再次跳闸
+│  │  ├─ 控制冲突
+│  │  └─ 保护动作
+│  │
+│  └─ 8.7 S6 → S0 完成条件
+│     ├─ 并网稳定确认
+│     ├─ 所有构网源退出
+│     └─ 无未清除锁定
+│
+└─ 9. 全流程日志、审计与验收
+   ├─ 9.1 状态迁移日志
+   ├─ 9.2 关键动作证据链
+   ├─ 9.3 FAT / SAT 用例映射
+   └─ 9.4 责任与边界记录
+</code></pre>
+</div>
+<h1>Grid-Connected ↔ Islanded ↔ Grid-Connected Control Framework</h1>
+<h2>工程级总框架 · 状态机导向</h2>
+<hr class="divider" />
+<h2>0. 总体设计原则与系统边界</h2>
+<p>本章用于定义<strong>并–离–并控制系统的最高层工程原则与不可越界的系统边界</strong>。</p>
+<p>其目标不是描述“如何控制”，而是明确：</p>
+<ul><li>谁<strong>有权</strong>做什么</li><li>谁<strong>绝对不能</strong>做什么</li><li>哪些动作必须<strong>本地完成</strong></li><li>哪些动作只能由 <strong>EMS 统一调度</strong></li><li>整个系统在任何异常条件下，<strong>不会因控制越权而进入危险状态</strong></li></ul>
+<p>本章内容对后续所有状态（S0–S6）具有<strong>全局约束力</strong>。</p>
+<hr class="divider" />
+<h2>0.1 控制与保护职责边界</h2>
+<p>并–离–并系统必须严格区分<strong>保护层</strong>与<strong>控制/策略层</strong>。</p>
+<p>任何混淆两者职责的设计，都会在现场造成不可预测风险。</p>
+<h3>0.1.1 防孤岛继电器（Primary Protection）</h3>
+<p>防孤岛继电器属于<strong>一次保护设备</strong>，其核心特征如下：</p>
+<div class="code-block">
+<pre><code class="language-plain text">防孤岛继电器职责边界
+├─ 实时监测电网侧电压 / 频率 / 相位
+├─ 在满足保护判据时
+│  └─ 直接、无条件、无需 EMS 参与
+│     └─ 操作 PCC 主断路器跳闸
+├─ 动作优先级
+│  └─ 高于 EMS、PCS、DG 控制器
+└─ 禁止行为
+   ├─ 不接收 EMS 合闸指令
+   ├─ 不具备自动重合闸功能
+   └─ 不参与系统运行策略判断
+</code></pre>
+</div>
+<p>工程原则：</p>
+<ul><li>防孤岛继电器<strong>只做一件事</strong>：</li><li>它不是控制器，不是调度器，也不是“智能决策单元”</li></ul>
+<hr class="divider" />
+<h3>0.1.2 EMS（Supervisory Control & Strategy）</h3>
+<p>EMS 是系统的<strong>最高层调度与策略执行单元</strong>，但<strong>不是保护装置</strong>。</p>
+<div class="code-block">
+<pre><code class="language-plain text">EMS 职责边界
+├─ 系统状态机管理（S0–S6）
+├─ 并–离–并流程调度
+├─ 合闸授权的唯一合法来源
+├─ 策略执行
+│  ├─ 并网策略
+│  ├─ 离网策略
+│  └─ 优化策略
+├─ 状态闭环确认
+│  └─ 通过 DI / 通信反馈
+└─ 禁止行为
+   ├─ 依赖单一测量源做保护动作
+   ├─ 替代继电器承担一次保护职责
+   └─ 在断路器状态不可信时继续流程推进
+</code></pre>
+</div>
+<p>工程原则：</p>
+<ul><li>EMS 的所有动作都必须是<strong>可中止、可回退、可审计的</strong></li><li>EMS 永远不能假设“下层设备一定正确执行”</li></ul>
+<hr class="divider" />
+<h3>0.1.3 本地控制器 / PCS / DG Controller</h3>
+<p>本地控制器用于<strong>快速、确定性的设备级控制</strong>。</p>
+<div class="code-block">
+<pre><code class="language-plain text">本地控制器职责边界
+├─ PCS（BESS 逆变器）
+│  ├─ 构网 / 跟网控制
+│  ├─ 电压 / 频率快速响应
+│  └─ 电流 / 功率保护
+├─ DG Controller
+│  ├─ 启停控制
+│  ├─ 转速 / 电压调节
+│  └─ 反功率、超速等本地保护
+└─ 通用原则
+   ├─ 本地保护优先于 EMS 指令
+   ├─ 不直接操作 PCC 主断路器
+   └─ 不参与并–离–并决策逻辑
+</code></pre>
+</div>
+<hr class="divider" />
+<h2>0.2 跳闸与合闸控制权定义</h2>
+<p>并–离–并系统的<strong>最大工程风险之一</strong>，来自于对跳闸/合闸控制权的模糊设计。</p>
+<p>本系统采用<strong>强约束、不可协商</strong>的控制权定义。</p>
+<hr class="divider" />
+<h3>0.2.1 Trip：继电器主路径 + EMS 冗余补跳</h3>
+<div class="code-block">
+<pre><code class="language-plain text">跳闸控制权结构
+├─ 主路径（Primary Trip）
+│  └─ 防孤岛继电器
+│     └─ 直接操作 PCC 跳闸线圈
+├─ 冗余路径（Backup Trip）
+│  └─ EMS
+│     └─ 仅在确认“应跳未跳”时
+│        └─ 通过 DO1 执行补跳
+└─ 禁止行为
+   └─ EMS 不得屏蔽、延迟或否决继电器跳闸
+</code></pre>
+</div>
+<p>工程要点：</p>
+<ul><li>EMS 的补跳是<strong>兜底措施</strong>，不是并列保护</li><li>任一跳闸动作，都必须以 <strong>52b 反馈成立</strong>作为最终判据</li></ul>
+<hr class="divider" />
+<h3>0.2.2 Close：EMS 唯一授权路径</h3>
+<div class="code-block">
+<pre><code class="language-plain text">合闸控制权结构
+├─ 唯一授权者
+│  └─ EMS
+├─ 合闸前提
+│  ├─ 状态机允许
+│  ├─ C1–C7 全满足
+│  └─ PCC 处于开位且反馈可信
+└─ 合闸执行
+   └─ EMS → 中间继电器 → Close Coil
+</code></pre>
+</div>
+<p>工程要点：</p>
+<ul><li>合闸是<strong>系统级决策动作</strong></li><li>不允许任何“自动合闸”“保护合闸”“设备自合闸”</li></ul>
+<hr class="divider" />
+<h3>0.2.3 禁止任何非 EMS 合闸路径</h3>
+<p>这是<strong>硬性红线</strong>：</p>
+<div class="code-block">
+<pre><code class="language-plain text">明确禁止
+├─ 防孤岛继电器自动合闸
+├─ PCS / DG 控制器直接合闸
+├─ 现场按钮绕过 EMS 合闸
+└─ 任意“逻辑或接线级旁路合闸”
+</code></pre>
+</div>
+<hr class="divider" />
+<h2>0.3 PCC 主断路器 I/O 统一定义</h2>
+<p>为保证控制逻辑、FAT、SAT、现场调试的一致性，</p>
+<p>PCC 主断路器的 I/O 定义必须<strong>全系统统一</strong>。</p>
+<div class="code-block">
+<pre><code class="language-plain text">PCC 断路器 I/O 定义
+├─ DO1：Trip（Shunt Trip Coil）
+│  └─ 跳闸控制输出
+├─ DO2：Close（Close Coil）
+│  └─ 合闸控制输出
+├─ DI1：52a（合位反馈）
+│  └─ 断路器已合闸
+└─ DI2：52b（分位反馈）
+   └─ 断路器已断开
+</code></pre>
+</div>
+<p>工程原则：</p>
+<ul><li>所有状态判断<strong>必须基于 DI</strong></li><li>任何“发了 DO 就假定成功”的逻辑，均不允许存在</li></ul>
+<hr class="divider" />
+<h2>0.4 供电与可靠性边界</h2>
+<h3>0.4.1 AIPP UPS（保护电源）</h3>
+<div class="code-block">
+<pre><code class="language-plain text">AIPP UPS 职责
+├─ 为防孤岛继电器供电
+├─ 为跳闸回路供电
+└─ 确保失电情况下仍可解列
+</code></pre>
+</div>
+<hr class="divider" />
+<h3>0.4.2 ECP UPS（控制电源）</h3>
+<div class="code-block">
+<pre><code class="language-plain text">ECP UPS 职责
+├─ 为 EMS / PLC 供电
+├─ 为控制继电器供电
+└─ 为通信与记录系统供电
+</code></pre>
+</div>
+<hr class="divider" />
+<h3>0.4.3 UPS 不参与能量供给</h3>
+<div class="code-block">
+<pre><code class="language-plain text">明确边界
+├─ UPS ≠ 构网电源
+├─ UPS ≠ 离网供电资源
+└─ UPS 只服务于控制与保护连续性
+</code></pre>
+</div>
+<hr class="divider" />
+<h2>0.5 状态机与日志原则</h2>
+<h3>0.5.1 状态唯一、不可跳级</h3>
+<div class="code-block">
+<pre><code class="language-plain text">状态机基本约束
+├─ 任一时刻仅允许一个状态有效
+├─ 状态迁移必须按定义路径发生
+└─ 禁止跨状态直接跳转
+</code></pre>
+</div>
+<hr class="divider" />
+<h3>0.5.2 所有关键动作必须闭环</h3>
+<div class="code-block">
+<pre><code class="language-plain text">闭环原则
+├─ 所有 DO 动作
+│  └─ 必须有 DI 或通信反馈确认
+├─ 所有状态迁移
+│  └─ 必须有明确判据
+└─ 所有失败
+   └─ 必须进入可定义的异常分支
+</code></pre>
+</div>
+<hr class="divider" />
+<h3>0.5.3 所有并–离–并事件可审计、可回溯</h3>
+<div class="code-block">
+<pre><code class="language-plain text">审计原则
+├─ 状态迁移记录
+├─ 跳闸 / 合闸时间戳
+├─ 判据快照
+└─ 失败与回退路径记录
+</code></pre>
+</div>
+<hr class="divider" />
+<h2>1. 状态机总览</h2>
+<p>本章定义并–离–并控制系统的<strong>全局状态机结构</strong>。</p>
+<p>该状态机是<strong>单主线、强约束、不可跳级</strong>的工程状态机，适用于：</p>
+<ul><li>正常运行</li><li>电网异常</li><li>离网运行</li><li>回并网</li><li>并网恢复</li></ul>
+<p>后续所有章节（S0–S6）均<strong>必须严格遵守本章定义的状态与迁移关系</strong>。</p>
+<hr class="divider" />
+<h3>1.1 状态机设计目标</h3>
+<div class="code-block">
+<pre><code class="language-plain text">状态机设计目标
+├─ 明确系统在任一时刻“处于什么状态”
+├─ 明确每个状态“允许的控制动作集合”
+├─ 明确状态之间“唯一合法迁移路径”
+├─ 禁止并行状态与逻辑重叠
+└─ 为 FAT / SAT / 事故分析提供确定性结构
+</code></pre>
+</div>
+<p>工程原则：</p>
+<ul><li><strong>状态 ≠ 模式参数</strong></li><li>状态是系统级事实，不是可选配置</li></ul>
+<hr class="divider" />
+<h3>1.2 全局状态列表（S0–S6）</h3>
+<div class="code-block">
+<pre><code class="language-plain text">全局状态定义
+├─ S0：并网正常运行
+├─ S1：电网异常判定与快速解列
+├─ S2：离网接管准备
+├─ S3：离网运行
+├─ S4：回并网准备
+├─ S5：合闸执行与闭环确认
+└─ S6：并网后退坡与稳态恢复
+</code></pre>
+</div>
+<p>说明：</p>
+<ul><li>任一时刻，系统<strong>只能处于上述 7 个状态之一</strong></li><li>不允许“并网 + 离网策略并存”的混合状态</li></ul>
+<hr class="divider" />
+<h3>1.3 状态机主迁移路径（正常流程）</h3>
+<div class="code-block">
+<pre><code class="language-plain text">主流程状态迁移
+S0
+ └─(电网异常)→ S1
+     └─(解列确认)→ S2
+         └─(构网条件满足)→ S3
+             └─(电网恢复候选)→ S4
+                 └─(合闸许可成立)→ S5
+                     └─(合闸成功)→ S6
+                         └─(并网稳态确认)→ S0
+</code></pre>
+</div>
+<p>工程含义：</p>
+<ul><li>并–离–并是一个<strong>完整闭环</strong></li><li>S0 既是起点，也是终点</li><li>S3 不是终态，S6 也不是终态</li></ul>
+<hr class="divider" />
+<h3>1.4 状态机中的“不可逆瞬时态”</h3>
+<p>某些状态具备<strong>不可逆特征</strong>，一旦进入，必须完成或回退，不允许中途取消。</p>
+<div class="code-block">
+<pre><code class="language-plain text">不可逆瞬时态
+├─ S1：快速解列阶段
+│  └─ 一旦触发，必须完成跳闸确认
+├─ S5：合闸执行阶段
+│  └─ 一旦发出合闸脉冲，必须等待结果
+</code></pre>
+</div>
+<p>工程原则：</p>
+<ul><li>不允许在 S1 / S5 中插入“策略判断”</li><li>不允许人为“中止”这些状态</li></ul>
+<hr class="divider" />
+<h3>1.5 状态迁移的触发类型</h3>
+<div class="code-block">
+<pre><code class="language-plain text">状态迁移触发源分类
+├─ 保护触发
+│  └─ 防孤岛继电器动作
+├─ 测量触发
+│  └─ 电网质量 / 计量判据
+├─ 状态确认触发
+│  └─ 52a / 52b / 设备反馈
+├─ 时间触发
+│  └─ 稳定窗口 / 去抖 / 延时
+└─ 策略触发
+   └─ EMS 判据满足
+</code></pre>
+</div>
+<p>工程原则：</p>
+<ul><li>任一状态迁移<strong>必须能归因到上述某一触发类型</strong></li><li>禁止“隐式迁移”“推断迁移”</li></ul>
+<hr class="divider" />
+<h3>1.6 状态与控制权限的关系</h3>
+<div class="code-block">
+<pre><code class="language-plain text">状态与控制权限映射
+├─ S0
+│  ├─ 并网策略允许
+│  └─ 离网策略禁止
+├─ S1
+│  ├─ 仅允许保护与补跳
+│  └─ 禁止任何策略动作
+├─ S2
+│  ├─ 初始化允许
+│  └─ 构网未开始
+├─ S3
+│  ├─ 离网策略允许
+│  └─ 并网策略冻结
+├─ S4
+│  ├─ 回并网准备允许
+│  └─ 禁止新增离网动作
+├─ S5
+│  ├─ 合闸动作唯一允许
+│  └─ 禁止任何其他控制
+└─ S6
+   ├─ 退坡与恢复允许
+   └─ 优化策略延后
+</code></pre>
+</div>
+<p>工程原则：</p>
+<ul><li><strong>控制权限由状态决定</strong></li><li>任何“跨状态控制”都视为设计缺陷</li></ul>
+<hr class="divider" />
+<h3>1.7 状态机与异常路径的关系</h3>
+<p>异常不构成新的“状态编号”，而是<strong>状态内的分支路径</strong>。</p>
+<div class="code-block">
+<pre><code class="language-plain text">异常处理原则
+├─ 异常发生在当前状态内
+├─ 异常处理结果
+│  ├─ 回退至上一安全状态
+│  ├─ 进入保护解列路径
+│  └─ 锁定系统等待人工干预
+└─ 异常不得创建“隐藏状态”
+</code></pre>
+</div>
+<hr class="divider" />
+<h3>1.8 状态机与日志系统的绑定</h3>
+<div class="code-block">
+<pre><code class="language-plain text">状态日志绑定原则
+├─ 每次状态进入
+│  └─ 记录 timestamp_enter
+├─ 每次状态退出
+│  └─ 记录 timestamp_exit
+├─ 每次迁移
+│  └─ 记录 trigger_source
+└─ 每次失败
+   └─ 记录 failure_reason
+</code></pre>
+</div>
+<p>工程意义：</p>
+<ul><li>任何一次并–离–并过程，<strong>都可以完整重放</strong></li><li>日志是工程系统的一部分，不是调试附属物</li></ul>
+<hr class="divider" />
+<h3>1.9 本章工程结论</h3>
+<ul><li>状态机是整个并–离–并系统的<strong>骨架</strong></li><li>所有控制逻辑必须“挂在状态上”</li><li>不允许绕过状态机直接操作关键设备</li><li>后续每一章（S0–S6）都是<strong>对某一个状态的细化</strong></li></ul>
+<hr class="divider" />
+<h2>2. S0 并网正常运行</h2>
+<p>(Grid-Tied Normal Operation)</p>
+<p>S0 是并–离–并状态机的<strong>基准态</strong>。</p>
+<p>在该状态下，微电网作为<strong>受控并网系统</strong>运行，电网是唯一的电压与频率主控源。</p>
+<hr class="divider" />
+<h3>2.1 并网运行模式定义</h3>
+<h3>2.1.1 电网主控频率与电压</h3>
+<div class="code-block">
+<pre><code class="language-plain text">并网主控原则
+├─ 频率主控
+│  └─ 公用电网（Utility Grid）
+├─ 电压主控
+│  └─ 公用电网（Utility Grid）
+└─ 微电网角色
+   └─ 跟随（Grid-Following）
+</code></pre>
+</div>
+<p>工程要点：</p>
+<ul><li>在 S0 状态下，微电网<strong>不具备构网权限</strong></li><li>任何本地设备（BESS / DG / PV）均不得主动设定母线频率或电压基准</li><li>PCS 必须运行在 <strong>Grid-Following</strong> 模式或等效并网模式</li></ul>
+<hr class="divider" />
+<h3>2.1.2 微电网跟随运行</h3>
+<div class="code-block">
+<pre><code class="language-plain text">微电网跟随运行特征
+├─ 频率来源：电网
+├─ 电压参考：电网
+├─ 功率行为
+│  ├─ 按 EMS 指令调节
+│  └─ 不影响电网稳定性
+└─ 控制层级
+   └─ EMS 为调度层
+</code></pre>
+</div>
+<p>工程原则：</p>
+<ul><li>S0 下的所有功率控制，必须是<strong>缓变、可预测、可限制的</strong></li><li>不允许任何“快速功率突变”行为干扰电网</li></ul>
+<hr class="divider" />
+<h3>2.2 并网策略模块</h3>
+<p>并网策略是 <strong>S0 状态的核心功能集合</strong>。</p>
+<p>这些策略在 S0 下允许运行，在其他状态要么冻结、要么受限。</p>
+<hr class="divider" />
+<h3>2.2.1 防逆流 / 零逆流</h3>
+<div class="code-block">
+<pre><code class="language-plain text">防逆流控制
+├─ 监测点
+│  └─ PCC 功率方向
+├─ 控制对象
+│  ├─ BESS 出力
+│  └─ PV 出力
+└─ 控制目标
+   └─ 防止向电网反送功率
+</code></pre>
+</div>
+<p>工程要点：</p>
+<ul><li>防逆流是 <strong>并网安全策略</strong>，不是经济策略</li><li>在并网状态下，其优先级应高于优化类策略</li></ul>
+<hr class="divider" />
+<h3>2.2.2 需量管理</h3>
+<div class="code-block">
+<pre><code class="language-plain text">需量管理策略
+├─ 监测指标
+│  └─ 电网取电功率
+├─ 控制手段
+│  ├─ BESS 削峰
+│  └─ 负载管理（如配置）
+└─ 控制目标
+   └─ 限制最大需量
+</code></pre>
+</div>
+<p>工程要点：</p>
+<ul><li>所有需量控制动作必须满足：</li></ul>
+<hr class="divider" />
+<h3>2.2.3 TOU / 电价优化</h3>
+<div class="code-block">
+<pre><code class="language-plain text">电价优化策略
+├─ 输入
+│  ├─ 分时电价表
+│  └─ 当前 SOC
+├─ 控制对象
+│  └─ BESS 充放电
+└─ 约束条件
+   ├─ 并网安全优先
+   └─ SOC 安全边界
+</code></pre>
+</div>
+<p>工程原则：</p>
+<ul><li>TOU 属于<strong>优化类策略</strong></li><li>不允许其改变并网保护与安全边界</li></ul>
+<hr class="divider" />
+<h3>2.2.4 SOC 管理</h3>
+<div class="code-block">
+<pre><code class="language-plain text">SOC 管理逻辑
+├─ SOC 上限
+│  └─ 防止过充
+├─ SOC 下限
+│  └─ 保留离网能力
+└─ SOC 调节
+   └─ 与并网策略协调
+</code></pre>
+</div>
+<p>工程要点：</p>
+<ul><li>在 S0 下，SOC 管理应始终为<strong>离网能力留余量</strong></li><li>不允许在 S0 下将 SOC 拉至“离网不可用区间”</li></ul>
+<hr class="divider" />
+<h3>2.2.5 优化类策略（AI / 预测）</h3>
+<div class="code-block">
+<pre><code class="language-plain text">优化类策略特征
+├─ 基于预测
+│  ├─ 负载
+│  ├─ 电价
+│  └─ 可再生出力
+├─ 调节对象
+│  └─ BESS / 负载
+└─ 运行约束
+   ├─ 不干扰并网稳定
+   └─ 可被随时中断
+</code></pre>
+</div>
+<p>工程原则：</p>
+<ul><li>优化策略在 S0 下允许运行</li><li>但必须具备<strong>立即冻结能力</strong>，以便进入 S1</li></ul>
+<hr class="divider" />
+<h3>2.3 并网状态监测</h3>
+<p>S0 状态必须持续监测系统关键量，以判断是否需要离开并网状态。</p>
+<hr class="divider" />
+<h3>2.3.1 PCC 状态（52a / 52b）</h3>
+<div class="code-block">
+<pre><code class="language-plain text">PCC 状态监测
+├─ DI1 = 52a
+│  └─ 并网物理闭合确认
+├─ DI2 = 52b
+│  └─ 断开状态确认
+└─ 一致性要求
+   └─ 不允许冲突或抖动
+</code></pre>
+</div>
+<p>工程要点：</p>
+<ul><li>S0 的成立前提是：</li><li>任何反馈异常都必须进入异常处理或 S1</li></ul>
+<hr class="divider" />
+<h3>2.3.2 电网质量监测</h3>
+<div class="code-block">
+<pre><code class="language-plain text">电网质量指标
+├─ 电压
+├─ 频率
+├─ 相位
+└─ 连续稳定性
+</code></pre>
+</div>
+<p>工程原则：</p>
+<ul><li>电网质量监测是 <strong>S0 → S1 的核心触发来源</strong></li><li>EMS 不做保护，但做“保护前判断”</li></ul>
+<hr class="divider" />
+<h3>2.3.3 本地电源状态监测</h3>
+<div class="code-block">
+<pre><code class="language-plain text">本地资源监测
+├─ BESS
+│  ├─ SOC
+│  ├─ 出力
+│  └─ 告警
+├─ DG
+│  └─ 待机状态
+└─ PV
+   └─ 并网状态
+</code></pre>
+</div>
+<p>工程要点：</p>
+<ul><li>本地设备异常<strong>不一定立刻离网</strong></li><li>但必须被记录，并参与后续决策</li></ul>
+<hr class="divider" />
+<h3>2.4 S0 → S1 触发条件</h3>
+<p>S0 是一个<strong>可被强制打断的状态</strong>。</p>
+<p>当以下任一条件成立时，系统必须立即进入 S1。</p>
+<hr class="divider" />
+<h3>2.4.1 继电器判定电网异常</h3>
+<div class="code-block">
+<pre><code class="language-plain text">主触发
+└─ 防孤岛继电器动作
+</code></pre>
+</div>
+<p>工程原则：</p>
+<ul><li>这是最高优先级触发</li><li>EMS 不得延迟或否决</li></ul>
+<hr class="divider" />
+<h3>2.4.2 计量侧电网异常</h3>
+<div class="code-block">
+<pre><code class="language-plain text">冗余触发
+└─ 智能电表检测异常
+</code></pre>
+</div>
+<p>工程原则：</p>
+<ul><li>用于交叉验证与提前预警</li><li>不替代继电器</li></ul>
+<hr class="divider" />
+<h3>2.4.3 EMS 等效电网异常判据</h3>
+<div class="code-block">
+<pre><code class="language-plain text">EMS 判据
+├─ 电压越限
+├─ 频率越限
+└─ 连续异常持续时间
+</code></pre>
+</div>
+<p>工程原则：</p>
+<ul><li>EMS 判据可触发 <strong>S1</strong></li><li>但不直接执行保护跳闸，除非进入补跳逻辑</li></ul>
+<hr class="divider" />
+<h3>2.5 本章工程结论</h3>
+<ul><li>S0 是并–离–并系统的“稳态基准”</li><li>所有优化与经济行为，只能发生在 S0</li><li>S0 必须随时具备被中断的能力</li><li>一旦触发离网条件，<strong>必须立即进入 S1</strong></li></ul>
+<hr class="divider" />
+<h2>3. S1 电网异常判定与快速解列</h2>
+<p>(Grid Abnormal Detection & Fast Disconnection)</p>
+<p>S1 是并–离–并状态机中<strong>最关键、最不可妥协的安全状态</strong>。</p>
+<p>该状态的目标只有一个：</p>
+<blockquote><pre style="white-space: pre-wrap; font-family: inherit; margin: 0;">在任何电网异常情况下，以最快、最确定、最少依赖的软件路径，确保微电网与公用电网物理解列。</pre></blockquote>
+<hr class="divider" />
+<h3>3.1 电网异常触发源</h3>
+<p>S1 的进入条件不依赖单一来源，而是采用<strong>多源触发、单一动作结果</strong>的设计原则。</p>
+<hr class="divider" />
+<h3>3.1.1 防孤岛继电器（主）</h3>
+<div class="code-block">
+<pre><code class="language-plain text">主触发源：防孤岛继电器
+├─ 监测量
+│  ├─ 电压
+│  ├─ 频率
+│  └─ 相位 / ROCOF（如配置）
+├─ 判据
+│  └─ 符合 IEEE / UL / Rule 21 等要求
+└─ 动作
+   └─ 直接驱动 PCC 主断路器跳闸
+</code></pre>
+</div>
+<p>工程要点：</p>
+<ul><li>防孤岛继电器是 <strong>S1 的绝对主触发</strong></li><li>其动作不需要、也不应等待 EMS 确认</li><li>动作时间尺度通常为 <strong>毫秒级</strong></li></ul>
+<hr class="divider" />
+<h3>3.1.2 智能电表 / 冗余计量</h3>
+<div class="code-block">
+<pre><code class="language-plain text">冗余触发源：计量侧
+├─ 监测量
+│  ├─ 电压
+│  ├─ 频率
+│  └─ 功率方向
+└─ 用途
+   ├─ 交叉验证
+   └─ 提前预警
+</code></pre>
+</div>
+<p>工程要点：</p>
+<ul><li>计量侧异常<strong>可以触发 S1</strong></li><li>但不能替代继电器作为主保护路径</li><li>在继电器失效或异常场景下，作为重要冗余判断</li></ul>
+<hr class="divider" />
+<h3>3.1.3 EMS 内部判据</h3>
+<div class="code-block">
+<pre><code class="language-plain text">EMS 等效判据
+├─ 电压越限（持续）
+├─ 频率越限（持续）
+└─ 多指标联合异常
+</code></pre>
+</div>
+<p>工程要点：</p>
+<ul><li>EMS 判据用于：</li><li>EMS 判据<strong>不作为一次保护</strong></li></ul>
+<hr class="divider" />
+<h3>3.2 主跳闸路径</h3>
+<h3>3.2.1 继电器直接跳闸 PCC</h3>
+<div class="code-block">
+<pre><code class="language-plain text">主跳闸链路
+防孤岛继电器
+ └─ 跳闸输出
+    └─ PCC 主断路器 Shunt Trip Coil
+       └─ 断路器机械分断
+</code></pre>
+</div>
+<p>工程原则：</p>
+<ul><li>该路径必须：</li><li>不允许：</li></ul>
+<hr class="divider" />
+<h3>3.3 EMS 闭环确认</h3>
+<p>继电器完成跳闸动作后，EMS 的首要任务不是“接管系统”，而是<strong>确认解列是否真的发生</strong>。</p>
+<hr class="divider" />
+<h3>3.3.1 52a / 52b 状态核查</h3>
+<div class="code-block">
+<pre><code class="language-plain text">解列确认逻辑
+├─ DI1（52a） = 0
+├─ DI2（52b） = 1
+└─ 状态保持稳定 ≥ 去抖时间
+</code></pre>
+</div>
+<p>工程要点：</p>
+<ul><li>52b 成立是<strong>物理解列的唯一确认</strong></li><li>不允许仅凭“发出跳闸命令”判断成功</li></ul>
+<hr class="divider" />
+<h3>3.3.2 去抖与超时判断</h3>
+<div class="code-block">
+<pre><code class="language-plain text">确认时间逻辑
+├─ 去抖时间
+│  └─ 防止触点抖动误判
+└─ 最大确认时间
+   └─ 防止无限等待
+</code></pre>
+</div>
+<p>工程原则：</p>
+<ul><li>若在规定时间内未确认解列：</li></ul>
+<hr class="divider" />
+<h3>3.4 EMS 冗余补跳</h3>
+<p>EMS 的补跳是 <strong>S1 中唯一允许的 EMS 主动控制动作</strong>。</p>
+<hr class="divider" />
+<h3>3.4.1 DO1 补跳条件</h3>
+<div class="code-block">
+<pre><code class="language-plain text">补跳触发条件
+├─ 已进入 S1
+├─ 继电器已判定异常
+├─ 超时未收到 52b
+└─ 控制电源正常
+</code></pre>
+</div>
+<p>工程要点：</p>
+<ul><li>补跳是<strong>兜底措施</strong></li><li>不应在正常情况下频繁触发</li></ul>
+<hr class="divider" />
+<h3>3.4.2 补跳脉冲控制</h3>
+<div class="code-block">
+<pre><code class="language-plain text">补跳执行逻辑
+EMS DO1
+ └─ 输出跳闸脉冲
+    └─ Shunt Trip Coil
+</code></pre>
+</div>
+<p>工程要点：</p>
+<ul><li>跳闸脉冲必须是：</li><li>禁止持续输出</li></ul>
+<hr class="divider" />
+<h3>3.4.3 补跳重试与锁定</h3>
+<div class="code-block">
+<pre><code class="language-plain text">补跳策略
+├─ 最大补跳次数
+│  └─ 通常 ≤ 1 次
+├─ 若仍失败
+│  └─ 进入危险锁定态
+</code></pre>
+</div>
+<p>工程原则：</p>
+<ul><li>禁止反复补跳</li><li>防止线圈过热或机械损伤</li></ul>
+<hr class="divider" />
+<h3>3.5 跳闸失败与危险锁定</h3>
+<p>当系统无法确认解列时，必须进入<strong>明确的危险状态</strong>。</p>
+<hr class="divider" />
+<h3>3.5.1 拒动</h3>
+<div class="code-block">
+<pre><code class="language-plain text">拒动判据
+├─ DO1 已执行
+└─ 52b 未成立
+</code></pre>
+</div>
+<hr class="divider" />
+<h3>3.5.2 反馈冲突</h3>
+<div class="code-block">
+<pre><code class="language-plain text">反馈异常
+├─ 52a = 1 且 52b = 1
+├─ 52a = 0 且 52b = 0
+└─ 状态快速抖动
+</code></pre>
+</div>
+<hr class="divider" />
+<h3>3.5.3 控制电源异常</h3>
+<div class="code-block">
+<pre><code class="language-plain text">电源异常
+├─ ECP UPS 异常
+└─ 控制链路不可用
+</code></pre>
+</div>
+<hr class="divider" />
+<h3>3.5.4 危险锁定行为</h3>
+<div class="code-block">
+<pre><code class="language-plain text">危险锁定动作
+├─ 禁止合闸
+├─ 禁止进入离网构网
+├─ 保持所有设备最保守状态
+└─ 等待人工处理
+</code></pre>
+</div>
+<hr class="divider" />
+<h3>3.6 S1 → S2 转移条件</h3>
+<p>S1 <strong>不能直接进入 S3</strong>，必须经过 S2。</p>
+<div class="code-block">
+<pre><code class="language-plain text">S1 → S2 条件
+└─ PCC 物理解列确认成立
+   ├─ 52b = 1
+   ├─ 52a = 0
+   └─ 状态稳定
+</code></pre>
+</div>
+<p>工程原则：</p>
+<ul><li>解列未确认，离网运行不允许开始</li><li>S2 是离网的“安全缓冲层”</li></ul>
+<hr class="divider" />
+<h3>3.7 本章工程结论</h3>
+<ul><li>S1 是保护优先于控制的典型体现</li><li>防孤岛继电器是唯一主跳闸路径</li><li>EMS 只做确认与兜底</li><li><strong>未确认解列，绝不允许构网</strong></li></ul>
+<hr class="divider" />
+<h2>4. S2 离网接管准备</h2>
+<p>(Island Takeover Preparation)</p>
+<p>S2 是一个<strong>判定型状态</strong>，而不是运行状态。</p>
+<p>在 S2 中，系统<strong>不构网、不供能、不并联 DG</strong>，只做<strong>检查、冻结与初始化</strong>。</p>
+<hr class="divider" />
+<h3>4.1 PCC 解列前置确认</h3>
+<p>离网运行的前提不是“电网异常”，而是<strong>并网点已经物理解列</strong>。</p>
+<h3>4.1.1 52b 成立</h3>
+<div class="code-block">
+<pre><code class="language-plain text">PCC 解列硬条件
+├─ DI2（52b） = 1
+├─ DI1（52a） = 0
+└─ 状态持续稳定 ≥ T_ISLAND_VERIFY
+</code></pre>
+</div>
+<p>工程要点：</p>
+<ul><li>52b 是进入 S2 的<strong>唯一合法门票</strong></li><li>不允许基于“逻辑判断”“继电器已动作”来假定解列成功</li></ul>
+<hr class="divider" />
+<h3>4.1.2 反馈一致性校验</h3>
+<div class="code-block">
+<pre><code class="language-plain text">反馈一致性检查
+├─ 禁止 52a = 1 且 52b = 1
+├─ 禁止 52a = 0 且 52b = 0
+└─ 禁止高速抖动
+</code></pre>
+</div>
+<p>工程原则：</p>
+<ul><li>反馈不可信，系统必须停在 S2</li><li>不允许带着“断路器状态不清楚”进入离网构网</li></ul>
+<hr class="divider" />
+<h3>4.2 构网资源可用性检查</h3>
+<p>S2 的核心任务是判断：</p>
+<p><strong>系统有没有“可用、可信、可控”的构网资源。</strong></p>
+<hr class="divider" />
+<h3>4.2.1 BESS / PCS 状态</h3>
+<div class="code-block">
+<pre><code class="language-plain text">BESS / PCS 检查项
+├─ PCS 通信在线
+├─ PCS 无严重告警
+├─ PCS 具备构网能力
+├─ SOC ≥ SOC_ISLAND_MIN
+└─ PCS 控制模式可切换
+</code></pre>
+</div>
+<p>工程要点：</p>
+<ul><li>BESS 是<strong>默认的首选构网资源</strong></li><li>若 BESS 不可用，是否允许进入离网，必须在设计阶段明确</li><li>不允许在 S2 阶段“临时决定由谁构网”</li></ul>
+<hr class="divider" />
+<h3>4.2.2 DG 可用性</h3>
+<div class="code-block">
+<pre><code class="language-plain text">DG 可用性检查
+├─ DG 通信在线
+├─ 启动系统正常
+├─ 无锁定 / 维护状态
+└─ 燃料与冷却条件满足
+</code></pre>
+</div>
+<p>工程原则：</p>
+<ul><li>在 S2 阶段，DG <strong>不启动</strong></li><li>只确认“是否具备后续启动条件”</li></ul>
+<hr class="divider" />
+<h3>4.2.3 控制电源状态</h3>
+<div class="code-block">
+<pre><code class="language-plain text">控制电源检查
+├─ ECP UPS 正常
+├─ 控制电压在允许范围
+└─ 无电源类告警
+</code></pre>
+</div>
+<p>工程要点：</p>
+<ul><li>若控制电源不可靠：</li></ul>
+<hr class="divider" />
+<h3>4.3 离网策略初始化</h3>
+<p>在 S2 中，系统需要完成<strong>策略层的“态度切换”</strong>。</p>
+<hr class="divider" />
+<h3>4.3.1 负载优先级策略</h3>
+<div class="code-block">
+<pre><code class="language-plain text">负载策略初始化
+├─ 标记关键负载
+├─ 标记可卸载负载
+└─ 冻结负载恢复策略
+</code></pre>
+</div>
+<p>工程原则：</p>
+<ul><li>在离网初期，<strong>保命优先于舒适</strong></li><li>所有“恢复类策略”必须延后</li></ul>
+<hr class="divider" />
+<h3>4.3.2 离网保护策略</h3>
+<div class="code-block">
+<pre><code class="language-plain text">离网保护初始化
+├─ 频率越限策略
+├─ 电压越限策略
+└─ 过流 / 过载响应策略
+</code></pre>
+</div>
+<p>工程要点：</p>
+<ul><li>离网保护阈值通常不同于并网</li><li>必须在构网前完成切换</li></ul>
+<hr class="divider" />
+<h3>4.3.3 并网策略冻结</h3>
+<div class="code-block">
+<pre><code class="language-plain text">并网策略冻结
+├─ TOU / 电价优化
+├─ 需量管理
+├─ 防逆流
+└─ AI / 预测策略
+</code></pre>
+</div>
+<p>工程原则：</p>
+<ul><li>所有并网策略在 S2 起必须被冻结</li><li>不允许并网与离网策略同时生效</li></ul>
+<hr class="divider" />
+<h3>4.4 S2 → S3 转移条件</h3>
+<p>只有在 <strong>“解列确认 + 构网资源允许 + 策略准备完成”</strong> 同时成立时，</p>
+<p>系统才允许进入 S3。</p>
+<div class="code-block">
+<pre><code class="language-plain text">S2 → S3 条件集合
+├─ PCC 已物理解列（52b 成立）
+├─ 断路器反馈一致可信
+├─ 至少一个构网资源可用
+├─ SOC 满足离网下限
+├─ 控制电源可靠
+└─ 系统未处于任何锁定态
+</code></pre>
+</div>
+<p>工程原则：</p>
+<ul><li>任一条件不满足：</li><li>不允许“带病进入离网运行”</li></ul>
+<hr class="divider" />
+<h3>4.5 本章工程结论</h3>
+<ul><li>S2 是<strong>离网前的最后一道安全门</strong></li><li>它不供电、不构网，只做“是否允许离网”的判断</li><li>大量现场事故，源于跳过或弱化 S2</li><li><strong>未通过 S2，不得进入 S3</strong></li></ul>
+<hr class="divider" />
+<h2>5. S3 离网运行</h2>
+<p>(Islanded Operation)</p>
+<p>S3 表示系统已经<strong>完成物理解列并成功进入离网供电状态</strong>。</p>
+<p>在该状态下，微电网必须<strong>独立维持电压与频率稳定</strong>，并在资源受限条件下持续运行。</p>
+<hr class="divider" />
+<h3>5.1 S3-0 离网入稳阶段</h3>
+<p>(Island Entry Stabilization)</p>
+<p>该阶段发生在 <strong>S2 → S3 的瞬间</strong>，时间尺度通常为 <strong>数百毫秒至数秒</strong>。</p>
+<h3>5.1.1 构网模式建立</h3>
+<div class="code-block">
+<pre><code class="language-plain text">构网模式建立
+├─ 选择构网主资源
+│  └─ 默认：BESS / PCS
+├─ PCS 切换至 Grid-Forming
+└─ 禁止其他资源并联
+</code></pre>
+</div>
+<p>工程要点：</p>
+<ul><li>构网主控只能有一个</li><li>构网建立必须在<strong>负载完全受控</strong>的前提下进行</li></ul>
+<hr class="divider" />
+<h3>5.1.2 电压 / 频率基准建立</h3>
+<div class="code-block">
+<pre><code class="language-plain text">基准建立
+├─ 频率参考
+│  └─ PCS 内部参考
+├─ 电压参考
+│  └─ PCS 电压控制环
+└─ 初始斜坡
+   └─ 防止冲击
+</code></pre>
+</div>
+<p>工程原则：</p>
+<ul><li>初始构网允许短时偏差</li><li>但必须在可控时间内收敛</li></ul>
+<hr class="divider" />
+<h3>5.1.3 动态稳定恢复</h3>
+<div class="code-block">
+<pre><code class="language-plain text">稳定性恢复
+├─ 电压收敛
+├─ 频率收敛
+└─ 电流限制生效
+</code></pre>
+</div>
+<p>工程要点：</p>
+<ul><li>若入稳失败：</li></ul>
+<hr class="divider" />
+<h3>5.2 S3-1 BESS 主构网稳态</h3>
+<p>(BESS Grid-Forming Steady State)</p>
+<p>S3 的默认稳态是 <strong>BESS 主构网</strong>。</p>
+<hr class="divider" />
+<h3>5.2.1 Grid-Forming 控制</h3>
+<div class="code-block">
+<pre><code class="language-plain text">BESS 构网控制
+├─ 电压控制环
+├─ 频率控制环
+└─ 电流 / 功率限幅
+</code></pre>
+</div>
+<p>工程原则：</p>
+<ul><li>构网控制必须是<strong>本地闭环</strong></li><li>EMS 只下达目标，不参与快速环路</li></ul>
+<hr class="divider" />
+<h3>5.2.2 电压 / 频率调节</h3>
+<div class="code-block">
+<pre><code class="language-plain text">稳态调节
+├─ 电压保持在离网允许带
+├─ 频率保持在离网允许带
+└─ 对负载变化快速响应
+</code></pre>
+</div>
+<p>工程要点：</p>
+<ul><li>离网允许带通常宽于并网</li><li>但必须满足关键负载需求</li></ul>
+<hr class="divider" />
+<h3>5.2.3 动态功率支撑</h3>
+<div class="code-block">
+<pre><code class="language-plain text">动态支撑
+├─ 负载突变
+├─ DG 未并联前
+└─ 全部由 BESS 承担
+</code></pre>
+</div>
+<p>工程原则：</p>
+<ul><li>BESS 在此阶段是<strong>唯一动态缓冲</strong></li><li>EMS 不得引入延迟策略干扰</li></ul>
+<hr class="divider" />
+<h3>5.3 S3-2 SOC 管理与 DG 启动判据</h3>
+<p>离网运行的核心风险在于 <strong>SOC 枯竭</strong>。</p>
+<hr class="divider" />
+<h3>5.3.1 SOC 预警线</h3>
+<div class="code-block">
+<pre><code class="language-plain text">SOC 预警
+├─ SOC ≤ SOC_WARN
+└─ 行为
+   ├─ 提示告警
+   └─ 禁止负载恢复
+</code></pre>
+</div>
+<hr class="divider" />
+<h3>5.3.2 SOC 保命线</h3>
+<div class="code-block">
+<pre><code class="language-plain text">SOC 保命
+├─ SOC ≤ SOC_CRITICAL
+└─ 行为
+   ├─ 触发 DG 启动准备
+   ├─ 强制负载卸载
+   └─ 禁止高耗能策略
+</code></pre>
+</div>
+<p>工程原则：</p>
+<ul><li>保命线以下，经济性完全失效</li><li>系统目标变为“尽可能延长供电”</li></ul>
+<hr class="divider" />
+<h3>5.3.3 启动 / 禁止条件</h3>
+<div class="code-block">
+<pre><code class="language-plain text">DG 启动条件
+├─ SOC 低于阈值
+├─ DG 可用
+├─ 构网稳定
+└─ 非锁定态
+
+DG 启动禁止条件
+├─ 构网未稳定
+├─ PCS 异常
+└─ 系统处于危险状态
+</code></pre>
+</div>
+<hr class="divider" />
+<h3>5.4 S3-3 DG 启动与暖机</h3>
+<p>DG 启动是 <strong>离网运行中最危险的操作之一</strong>。</p>
+<hr class="divider" />
+<h3>5.4.1 启动流程</h3>
+<div class="code-block">
+<pre><code class="language-plain text">DG 启动流程
+├─ 启动命令
+├─ 转速建立
+├─ 电压建立
+└─ 进入暖机
+</code></pre>
+</div>
+<hr class="divider" />
+<h3>5.4.2 启动失败回退</h3>
+<div class="code-block">
+<pre><code class="language-plain text">启动失败
+├─ 重试限制
+├─ 标记不可用
+└─ 回退至 BESS-only
+</code></pre>
+</div>
+<p>工程原则：</p>
+<ul><li>禁止无限重启</li><li>启动失败必须被记录并参与后续决策</li></ul>
+<hr class="divider" />
+<h3>5.4.3 启动期间功率保障</h3>
+<div class="code-block">
+<pre><code class="language-plain text">启动期间
+├─ BESS 全功率支撑
+└─ 禁止负载恢复
+</code></pre>
+</div>
+<hr class="divider" />
+<h3>5.5 S3-4 DG 并联与负荷分担</h3>
+<p>DG 并联是 <strong>S3 的第二个高风险点</strong>。</p>
+<hr class="divider" />
+<h3>5.5.1 并联方式选择</h3>
+<div class="code-block">
+<pre><code class="language-plain text">并联方式
+├─ 同步并联
+└─ 经 PCS 缓冲并联（如支持）
+</code></pre>
+</div>
+<hr class="divider" />
+<h3>5.5.2 同步判据</h3>
+<div class="code-block">
+<pre><code class="language-plain text">同步判据
+├─ 频率差
+├─ 电压差
+└─ 相位差
+</code></pre>
+</div>
+<p>工程原则：</p>
+<ul><li>同步失败不得强并</li><li>必须回退并重试或放弃 DG</li></ul>
+<hr class="divider" />
+<h3>5.5.3 功率 / 无功分配</h3>
+<div class="code-block">
+<pre><code class="language-plain text">功率分担
+├─ BESS：快速调节
+├─ DG：稳态承担
+└─ Droop / 指令分配
+</code></pre>
+</div>
+<hr class="divider" />
+<h3>5.5.4 防反功率</h3>
+<div class="code-block">
+<pre><code class="language-plain text">防反功率
+├─ DG 本地保护
+└─ EMS 监测与告警
+</code></pre>
+</div>
+<hr class="divider" />
+<h3>5.6 S3-5 离网长时运行管理</h3>
+<hr class="divider" />
+<h3>5.6.1 负载卸载与恢复</h3>
+<div class="code-block">
+<pre><code class="language-plain text">负载管理
+├─ 分级卸载
+├─ 条件恢复
+└─ 禁止一次性恢复
+</code></pre>
+</div>
+<hr class="divider" />
+<h3>5.6.2 连续功率与热管理</h3>
+<div class="code-block">
+<pre><code class="language-plain text">热管理
+├─ BESS 温度
+├─ DG 温度
+└─ 长时功率限制
+</code></pre>
+</div>
+<hr class="divider" />
+<h3>5.6.3 黑启动 / 二次恢复策略</h3>
+<div class="code-block">
+<pre><code class="language-plain text">极端场景
+├─ 全黑启动
+└─ 构网失败后的二次尝试
+</code></pre>
+</div>
+<hr class="divider" />
+<h3>5.7 离网异常分支</h3>
+<div class="code-block">
+<pre><code class="language-plain text">异常分支
+├─ BESS 构网失败
+├─ DG 启动 / 并联失败
+├─ 频率 / 电压越限
+└─ 反馈异常
+</code></pre>
+</div>
+<p>工程原则：</p>
+<ul><li>异常必须回退到安全状态</li><li>不允许在异常中“硬撑运行”</li></ul>
+<hr class="divider" />
+<h3>5.8 S3 → S4 触发条件</h3>
+<div class="code-block">
+<pre><code class="language-plain text">进入回并网准备条件
+└─ 电网恢复候选检测
+</code></pre>
+</div>
+<p>工程要点：</p>
+<ul><li>只是“候选”，不是立即并网</li><li>必须进入 S4 进行充分准备</li></ul>
+<hr class="divider" />
+<h3>5.9 本章工程结论</h3>
+<ul><li>S3 是离网运行的完整工程态</li><li>构网主控必须唯一</li><li>SOC 管理决定系统生死</li><li>DG 是续命资源，不是主控</li><li><strong>任何离网异常，都必须有明确回退路径</strong></li></ul>
+<hr class="divider" />
+<h2>6. S4 回并网准备</h2>
+<p>(Reconnection Preparation)</p>
+<p>S4 的工程本质不是“准备合闸”，而是<strong>系统性地证明“现在并网是安全且可控的”</strong>。</p>
+<p>任何未完成 S4 的系统，都<strong>没有资格进入 S5</strong>。</p>
+<hr class="divider" />
+<h3>6.1 电网恢复感知</h3>
+<p>(Grid Recovery Detection)</p>
+<p>电网恢复不是一个信号，而是一段<strong>被验证的过程</strong>。</p>
+<h3>6.1.1 继电器侧感知</h3>
+<div class="code-block">
+<pre><code class="language-plain text">继电器侧电网感知
+├─ 电压恢复至允许范围
+├─ 频率恢复至允许范围
+└─ 连续保持
+</code></pre>
+</div>
+<p>工程要点：</p>
+<ul><li>继电器侧只负责<strong>是否“看见电网”</strong></li><li>不负责判断“是否可以并网”</li></ul>
+<hr class="divider" />
+<h3>6.1.2 计量侧感知</h3>
+<div class="code-block">
+<pre><code class="language-plain text">计量侧电网感知
+├─ PCC 电压稳定
+├─ PCC 频率稳定
+└─ 电网方向一致
+</code></pre>
+</div>
+<p>工程原则：</p>
+<ul><li>计量侧作为<strong>独立冗余判断路径</strong></li><li>任一侧异常，都不能进入下一步</li></ul>
+<hr class="divider" />
+<h3>6.2 电网稳定计时</h3>
+<p>(Grid Stability Timing)</p>
+<h3>6.2.1 稳定窗口定义</h3>
+<div class="code-block">
+<pre><code class="language-plain text">稳定窗口
+├─ 连续时间 ≥ T_grid_stable
+├─ 无越限
+└─ 无抖动
+</code></pre>
+</div>
+<p>工程经验：</p>
+<ul><li>电网“刚恢复”的瞬态最危险</li><li>必须等电网自己“冷静下来”</li></ul>
+<hr class="divider" />
+<h3>6.2.2 防抖逻辑</h3>
+<div class="code-block">
+<pre><code class="language-plain text">防抖机制
+├─ 瞬态异常清零计时
+├─ 连续稳定才累计
+└─ 任何回跳都回到 S3
+</code></pre>
+</div>
+<hr class="divider" />
+<h3>6.3 离网系统稳定性确认</h3>
+<p>(Islanded System Stability Check)</p>
+<p>回并网前，<strong>离网侧必须是“稳态中的稳态”</strong>。</p>
+<h3>6.3.1 母线稳定</h3>
+<div class="code-block">
+<pre><code class="language-plain text">母线状态
+├─ 电压稳定
+├─ 频率稳定
+└─ 无持续振荡
+</code></pre>
+</div>
+<hr class="divider" />
+<h3>6.3.2 DG / BESS 状态收敛</h3>
+<div class="code-block">
+<pre><code class="language-plain text">资源状态
+├─ BESS：功率收敛
+├─ DG：转速、电压稳定
+└─ 无并联异常
+</code></pre>
+</div>
+<p>工程要点：</p>
+<ul><li>回并网不允许在“系统本身不稳”的情况下进行</li><li>这是大量事故的根源</li></ul>
+<hr class="divider" />
+<h3>6.3.3 负载状态冻结</h3>
+<div class="code-block">
+<pre><code class="language-plain text">负载冻结
+├─ 禁止负载恢复
+├─ 禁止策略切换
+└─ 禁止人工干预
+</code></pre>
+</div>
+<p>工程原则：</p>
+<ul><li>回并网期间，系统结构必须是“冻结态”</li></ul>
+<hr class="divider" />
+<h3>6.4 回并网路径选择</h3>
+<p>(Reconnection Path Selection)</p>
+<h3>6.4.1 闭合过渡</h3>
+<p>(Closed Transition)</p>
+<div class="code-block">
+<pre><code class="language-plain text">闭合过渡条件
+├─ 微电网可同步
+├─ 同步控制能力存在
+└─ 获得明确授权
+</code></pre>
+</div>
+<p>工程提醒：</p>
+<ul><li>闭合过渡是“高级玩法”</li><li>没有工程能力，宁可不用</li></ul>
+<hr class="divider" />
+<h3>6.4.2 开路过渡</h3>
+<p>(Open Transition)</p>
+<div class="code-block">
+<pre><code class="language-plain text">开路过渡
+├─ PCC 已断开
+├─ 重新合闸并网
+└─ 最安全、最通用
+</code></pre>
+</div>
+<p>工程共识：</p>
+<ul><li>绝大多数项目应采用开路过渡</li><li>稳定性 > 连续性</li></ul>
+<hr class="divider" />
+<h3>6.5 构网主控确认</h3>
+<p>(Grid-Forming Master Confirmation)</p>
+<h3>6.5.1 并网瞬间主控归属</h3>
+<div class="code-block">
+<pre><code class="language-plain text">主控归属
+├─ 并网前：BESS / DG 构网
+├─ 并网瞬间：电网主控
+└─ 并网后：微电网跟随
+</code></pre>
+</div>
+<p>工程原则：</p>
+<ul><li>主控权不能模糊</li><li>不能出现“双主控”</li></ul>
+<hr class="divider" />
+<h3>6.5.2 DG / BESS 角色确认</h3>
+<div class="code-block">
+<pre><code class="language-plain text">角色切换
+├─ BESS：构网 → 跟随
+├─ DG：并联 → 卸载准备
+└─ PCS 控制模式切换
+</code></pre>
+</div>
+<hr class="divider" />
+<h3>6.6 合闸许可准备（C1–C7）</h3>
+<p>(Close Permission Preparation)</p>
+<p>这是 S4 的<strong>核心工程动作</strong>。</p>
+<h3>6.6.1 条件采集</h3>
+<div class="code-block">
+<pre><code class="language-plain text">条件采集
+├─ 电网稳定
+├─ PCC 开位确认
+├─ 构网稳定
+├─ 同步条件（如需要）
+├─ 控制电源正常
+├─ 通信正常
+└─ 无锁定态
+</code></pre>
+</div>
+<hr class="divider" />
+<h3>6.6.2 条件冻结</h3>
+<div class="code-block">
+<pre><code class="language-plain text">许可冻结
+├─ 形成许可快照
+├─ 禁止条件变更
+└─ 绑定合闸动作
+</code></pre>
+</div>
+<p>工程原则：</p>
+<ul><li>合闸使用的是“快照”</li><li>不是“实时再算一遍”</li></ul>
+<hr class="divider" />
+<h3>6.7 S4 → S5 转移条件</h3>
+<div class="code-block">
+<pre><code class="language-plain text">进入合闸执行条件
+├─ 所有 C1–C7 成立
+├─ 状态机未锁定
+└─ EMS 明确授权
+</code></pre>
+</div>
+<p>工程铁律：</p>
+<ul><li>S4 不允许任何合闸</li><li>只有 S5 才能下发 DO2</li></ul>
+<hr class="divider" />
+<h3>6.8 本章工程结论</h3>
+<ul><li>S4 是<strong>并网前最后一道安全闸门</strong></li><li>电网恢复 ≠ 可以并网</li><li>系统自身稳定是前提</li><li>合闸许可必须“冻结后执行”</li><li><strong>任何跳过 S4 的系统，都是事故系统</strong></li></ul>
+<hr class="divider" />
+<h2>7. S5 合闸执行与闭环确认</h2>
+<p>(Close Execution & Closed-Loop Verification)</p>
+<p>S5 是<strong>唯一允许主断路器合闸的状态</strong>。</p>
+<p>任何非 S5 状态的合闸尝试，工程上都应视为<strong>严重设计错误或违规操作</strong>。</p>
+<hr class="divider" />
+<h3>7.1 合闸前最终状态确认</h3>
+<p>(Final Pre-Close Verification)</p>
+<p>合闸前的确认不是“再算一次条件”，</p>
+<p>而是对 <strong>S4 中冻结的许可快照</strong> 做最终一致性核查。</p>
+<hr class="divider" />
+<h3>7.1.1 PCC 开位确认</h3>
+<div class="code-block">
+<pre><code class="language-plain text">合闸前硬条件
+├─ DI2（52b） = 1
+├─ DI1（52a） = 0
+└─ 状态稳定 ≥ T_pre_close
+</code></pre>
+</div>
+<p>工程铁律：</p>
+<ul><li>未确认开位，禁止合闸</li><li>禁止“试着合一下看看”</li></ul>
+<hr class="divider" />
+<h3>7.1.2 许可快照绑定</h3>
+<div class="code-block">
+<pre><code class="language-plain text">许可绑定
+├─ 使用 S4 冻结的 C1–C7 快照
+├─ 不重新计算条件
+└─ 快照 ID 绑定到本次合闸
+</code></pre>
+</div>
+<p>工程原则：</p>
+<ul><li>合闸用的是“当时被批准的条件”</li><li>而不是“现在看起来好像也行”</li></ul>
+<hr class="divider" />
+<h3>7.2 DO2 合闸执行</h3>
+<p>(Close Command Execution)</p>
+<h3>7.2.1 脉冲参数</h3>
+<div class="code-block">
+<pre><code class="language-plain text">DO2 合闸脉冲
+├─ 脉冲宽度：T_close_pulse
+├─ 单次触发
+└─ 禁止持续输出
+</code></pre>
+</div>
+<p>工程经验：</p>
+<ul><li>合闸线圈<strong>永远是脉冲控制</strong></li><li>持续上电是典型的灾难设计</li></ul>
+<hr class="divider" />
+<h3>7.2.2 中间继电器链路</h3>
+<div class="code-block">
+<pre><code class="language-plain text">合闸链路
+EMS DO2
+  ↓
+中间继电器
+  ↓
+断路器 Close Coil
+</code></pre>
+</div>
+<p>工程原则：</p>
+<ul><li>EMS 不直接驱动线圈</li><li>中间继电器是电气隔离与安全缓冲</li></ul>
+<hr class="divider" />
+<h3>7.3 合闸反馈确认</h3>
+<p>(Close Feedback Verification)</p>
+<h3>7.3.1 52a / 52b 判据</h3>
+<div class="code-block">
+<pre><code class="language-plain text">合闸成功判据
+├─ DI1（52a） = 1
+├─ DI2（52b） = 0
+└─ 在 T_close_confirm 内完成
+</code></pre>
+</div>
+<hr class="divider" />
+<h3>7.3.2 去抖与超时</h3>
+<div class="code-block">
+<pre><code class="language-plain text">反馈处理
+├─ 去抖时间 ≥ T_debounce
+├─ 超时未到位 → 失败
+└─ 冲突反馈 → 失败
+</code></pre>
+</div>
+<p>工程铁律：</p>
+<ul><li>没有反馈 = 没有合闸</li><li>逻辑上“我已经下命令了”毫无意义</li></ul>
+<hr class="divider" />
+<h3>7.4 合闸成功处理</h3>
+<p>(Close Success Handling)</p>
+<div class="code-block">
+<pre><code class="language-plain text">成功处理
+├─ PCC 状态 = 并网
+├─ 状态机推进至 S6
+├─ 记录合闸事件
+└─ 释放合闸许可
+</code></pre>
+</div>
+<p>工程要点：</p>
+<ul><li>合闸成功不是结束，而是<strong>下一阶段的开始</strong></li></ul>
+<hr class="divider" />
+<h3>7.5 合闸失败分支</h3>
+<p>(Close Failure Branches)</p>
+<h3>7.5.1 拒动</h3>
+<div class="code-block">
+<pre><code class="language-plain text">拒动判定
+├─ DO2 已执行
+├─ 52a 未到位
+└─ 超时
+</code></pre>
+</div>
+<p>处理原则：</p>
+<ul><li>记录</li><li>锁定</li><li>禁止重试（除非人工复位）</li></ul>
+<hr class="divider" />
+<h3>7.5.2 半合位</h3>
+<div class="code-block">
+<pre><code class="language-plain text">危险态
+├─ 52a / 52b 同时有效
+└─ 状态不确定
+</code></pre>
+</div>
+<p>工程铁律：</p>
+<ul><li>半合位 = 极高风险</li><li>必须立即锁定系统</li></ul>
+<hr class="divider" />
+<h3>7.5.3 状态异常</h3>
+<div class="code-block">
+<pre><code class="language-plain text">异常
+├─ 合闸后立即跳闸
+├─ 电网质量异常
+└─ 保护动作
+</code></pre>
+</div>
+<hr class="divider" />
+<h3>7.6 合闸后瞬态异常处理</h3>
+<p>(Post-Close Transient Handling)</p>
+<h3>7.6.1 快速回退</h3>
+<div class="code-block">
+<pre><code class="language-plain text">回退机制
+├─ 立即跳闸 PCC
+├─ 回到 S3 或 S4
+└─ 锁定并报警
+</code></pre>
+</div>
+<p>工程原则：</p>
+<ul><li>错一次可以</li><li>错两次就是系统设计问题</li></ul>
+<hr class="divider" />
+<h3>7.6.2 再次解列</h3>
+<div class="code-block">
+<pre><code class="language-plain text">再解列
+├─ 继电器或 EMS 跳闸
+├─ 保留事故证据
+└─ 禁止自动再合
+</code></pre>
+</div>
+<hr class="divider" />
+<h3>7.7 S5 → S6 转移条件</h3>
+<div class="code-block">
+<pre><code class="language-plain text">转移条件
+├─ PCC 合位确认
+├─ 并网瞬态无异常
+└─ 状态一致
+</code></pre>
+</div>
+<hr class="divider" />
+<h3>7.8 本章工程结论</h3>
+<ul><li>合闸是<strong>被授权的、一次性的、可审计动作</strong></li><li>合闸权必须集中在 EMS</li><li>没有反馈就没有合闸</li><li>合闸失败必须锁定</li><li><strong>“自动反复合闸”是典型反工程设计</strong></li></ul>
+<hr class="divider" />
+<h2>8. S6 并网后退坡与稳态恢复</h2>
+<p>(Post-Reconnection Ramp-Down & Steady-State Restoration)</p>
+<p>S6 的核心目标只有三点：</p>
+<ol><li><strong>电网重新成为唯一电压 / 频率主控</strong></li><li><strong>所有构网资源安全、有序退出</strong></li><li><strong>并网策略逐步恢复，不引入新扰动</strong></li></ol>
+<hr class="divider" />
+<h3>8.1 并网瞬态稳定观察</h3>
+<p>(Post-Close Transient Observation)</p>
+<p>合闸完成 ≠ 稳定完成。</p>
+<h3>8.1.1 频率 / 电压观察</h3>
+<div class="code-block">
+<pre><code class="language-plain text">并网瞬态观察
+├─ PCC 频率偏差
+├─ PCC 电压偏差
+└─ 短时振荡 / 冲击
+</code></pre>
+</div>
+<p>工程要点：</p>
+<ul><li>观察窗口通常为 5–30 s（视系统规模）</li><li>在该窗口内：</li></ul>
+<hr class="divider" />
+<h3>8.1.2 功率方向监测</h3>
+<div class="code-block">
+<pre><code class="language-plain text">功率方向
+├─ 防止反送
+├─ 防止瞬态大功率冲击
+└─ 防止 DG 反功率
+</code></pre>
+</div>
+<p>工程经验：</p>
+<ul><li>回并网瞬间的功率方向错误，是最常见的保护触发原因</li></ul>
+<hr class="divider" />
+<h3>8.1.3 保护预警</h3>
+<div class="code-block">
+<pre><code class="language-plain text">保护预警
+├─ 继电器无动作
+├─ PCS 无异常
+└─ DG 无跳闸趋势
+</code></pre>
+</div>
+<hr class="divider" />
+<h3>8.2 BESS 构网退坡</h3>
+<p>(BESS Grid-Forming Ramp-Down)</p>
+<p>BESS 是离网阶段的“临时主控”，</p>
+<p>但在并网后必须<strong>平滑退出主控角色</strong>。</p>
+<hr class="divider" />
+<h3>8.2.1 控制模式切换</h3>
+<div class="code-block">
+<pre><code class="language-plain text">PCS 模式切换
+├─ Grid-Forming → Grid-Following
+├─ 控制权逐步释放
+└─ 禁止硬切
+</code></pre>
+</div>
+<p>工程原则：</p>
+<ul><li>模式切换必须是渐进式</li><li>禁止“瞬间切断构网”</li></ul>
+<hr class="divider" />
+<h3>8.2.2 Droop 权重退坡</h3>
+<div class="code-block">
+<pre><code class="language-plain text">Droop 退坡
+├─ 频率 Droop 权重逐步减小
+├─ 电压 Droop 权重逐步减小
+└─ 最终权重 → 0
+</code></pre>
+</div>
+<p>工程经验：</p>
+<ul><li>Droop 不退坡，等于“双主控”</li><li>这是典型设计隐患</li></ul>
+<hr class="divider" />
+<h3>8.3 DG 卸载与停机</h3>
+<p>(Diesel Generator Unloading & Shutdown)</p>
+<p>DG 在回并网后<strong>不应继续承担长期功率</strong>，除非项目明确设计为并网并联运行。</p>
+<hr class="divider" />
+<h3>8.3.1 卸载策略</h3>
+<div class="code-block">
+<pre><code class="language-plain text">DG 卸载
+├─ 有功功率逐步降至 0
+├─ 无功退出
+└─ 防反功率监控
+</code></pre>
+</div>
+<p>工程要点：</p>
+<ul><li>先卸载，再停机</li><li>禁止“直接跳机”</li></ul>
+<hr class="divider" />
+<h3>8.3.2 冷却与停机条件</h3>
+<div class="code-block">
+<pre><code class="language-plain text">停机条件
+├─ 卸载完成
+├─ 冷却时间满足
+└─ 无告警
+</code></pre>
+</div>
+<hr class="divider" />
+<h3>8.3.3 备用策略</h3>
+<div class="code-block">
+<pre><code class="language-plain text">备用状态
+├─ 保持可快速启动
+└─ 进入待命
+</code></pre>
+</div>
+<hr class="divider" />
+<h3>8.4 PV 与并网逆变器恢复</h3>
+<p>(PV & Grid-Following Inverter Restoration)</p>
+<h3>8.4.1 斜坡限制</h3>
+<div class="code-block">
+<pre><code class="language-plain text">PV 恢复
+├─ 功率爬坡限制
+├─ 电压跟随
+└─ 频率跟随
+</code></pre>
+</div>
+<p>工程原则：</p>
+<ul><li>PV 是扰动源</li><li>恢复必须慢于系统吸收能力</li></ul>
+<hr class="divider" />
+<h3>8.4.2 防逆流校验</h3>
+<div class="code-block">
+<pre><code class="language-plain text">防逆流
+├─ 并网点功率方向
+├─ 策略重新启用
+└─ 限值校验
+</code></pre>
+</div>
+<hr class="divider" />
+<h3>8.5 并网策略逐步恢复</h3>
+<p>(Gradual Strategy Restoration)</p>
+<h3>8.5.1 基础策略</h3>
+<div class="code-block">
+<pre><code class="language-plain text">优先恢复
+├─ 防逆流
+├─ 保护联动
+└─ 安全策略
+</code></pre>
+</div>
+<hr class="divider" />
+<h3>8.5.2 稳定策略</h3>
+<div class="code-block">
+<pre><code class="language-plain text">稳定策略
+├─ SOC 管理
+├─ 基础调度
+└─ 简单优化
+</code></pre>
+</div>
+<hr class="divider" />
+<h3>8.5.3 优化策略</h3>
+<div class="code-block">
+<pre><code class="language-plain text">延后恢复
+├─ TOU
+├─ 需量管理
+└─ AI / 预测策略
+</code></pre>
+</div>
+<p>工程原则：</p>
+<ul><li>优化永远最后</li><li>稳定优先于收益</li></ul>
+<hr class="divider" />
+<h3>8.6 并网后异常处理</h3>
+<p>(Post-Reconnection Abnormal Handling)</p>
+<div class="code-block">
+<pre><code class="language-plain text">异常分支
+├─ 再次跳闸
+├─ 控制冲突
+├─ 保护动作
+└─ 通信异常
+</code></pre>
+</div>
+<p>工程原则：</p>
+<ul><li>一旦异常：</li></ul>
+<hr class="divider" />
+<h3>8.7 S6 → S0 完成条件</h3>
+<div class="code-block">
+<pre><code class="language-plain text">流程完成条件
+├─ 并网稳定 ≥ T_steady
+├─ BESS 构网完全退出
+├─ DG 停机或待命
+├─ PV 正常并网
+└─ 无未清除锁定
+</code></pre>
+</div>
+<hr class="divider" />
+<h3>8.8 本章工程结论</h3>
+<ul><li>S6 是“把系统送回现实世界”的阶段</li><li>构网退出必须平滑</li><li>DG 必须卸载后停机</li><li>策略恢复要分层、分速</li><li><strong>省略 S6 的系统，一定会在未来某一天出事故</strong></li></ul>
+<hr class="divider" />
+<h2>9. 全流程日志、审计与验收</h2>
+<p>(Logging, Auditability & Commissioning)</p>
+<hr class="divider" />
+<h3>9.1 状态迁移日志</h3>
+<p>(State Transition Logging)</p>
+<h3>9.1.1 状态机级日志（必须）</h3>
+<div class="code-block">
+<pre><code class="language-plain text">状态迁移日志结构
+├─ 时间戳（UTC / 本地）
+├─ 上一状态
+├─ 目标状态
+├─ 触发原因
+├─ 判据来源
+└─ 执行结果
+</code></pre>
+</div>
+<p>工程原则：</p>
+<ul><li><strong>每一次状态变化都必须有记录</strong></li><li>不允许“隐式状态切换”</li><li>不允许“系统自己悄悄换状态”</li></ul>
+<hr class="divider" />
+<h3>9.1.2 状态迁移完整性</h3>
+<div class="code-block">
+<pre><code class="language-plain text">完整性要求
+├─ 不允许跳级（如 S1 → S3）
+├─ 不允许回退无记录
+└─ 不允许人工覆盖无标记
+</code></pre>
+</div>
+<p>工程经验：</p>
+<ul><li>90% 的现场扯皮，来自“状态到底怎么变的”</li><li>日志就是事实</li></ul>
+<hr class="divider" />
+<h3>9.2 关键动作证据链</h3>
+<p>(Critical Action Evidence Chain)</p>
+<p>本系统中，以下动作<strong>必须具备完整证据链</strong>：</p>
+<div class="code-block">
+<pre><code class="language-plain text">关键动作清单
+├─ PCC 跳闸
+├─ EMS 补跳
+├─ 构网启动
+├─ DG 启动 / 并联
+├─ 合闸执行
+├─ 再次解列
+└─ 锁定 / 解锁
+</code></pre>
+</div>
+<hr class="divider" />
+<h3>9.2.1 动作证据结构</h3>
+<div class="code-block">
+<pre><code class="language-plain text">动作证据
+├─ 动作 ID
+├─ 触发源
+├─ 控制输出（DO）
+├─ 反馈输入（DI）
+├─ 超时 / 去抖结果
+└─ 成功 / 失败判定
+</code></pre>
+</div>
+<p>工程原则：</p>
+<ul><li>没有反馈，不构成“完成”</li><li>只有 DO，没有 DI，不是证据</li></ul>
+<hr class="divider" />
+<h3>9.2.2 证据不可篡改原则</h3>
+<div class="code-block">
+<pre><code class="language-plain text">审计原则
+├─ 日志只追加
+├─ 不允许覆盖
+└─ 时间顺序不可打乱
+</code></pre>
+</div>
+<hr class="divider" />
+<h3>9.3 FAT / SAT 用例映射</h3>
+<p>(Factory & Site Acceptance Test Mapping)</p>
+<p>S0–S6 状态机必须<strong>一一映射到 FAT / SAT 测试项</strong>。</p>
+<hr class="divider" />
+<h3>9.3.1 FAT 覆盖范围（工厂）</h3>
+<div class="code-block">
+<pre><code class="language-plain text">FAT 覆盖
+├─ I/O 点位正确性
+├─ 跳闸链路
+├─ 合闸链路
+├─ 状态机逻辑
+└─ 锁定机制
+</code></pre>
+</div>
+<p>工程原则：</p>
+<ul><li>FAT 不验证“电网”</li><li>FAT 验证“逻辑与控制闭环”</li></ul>
+<hr class="divider" />
+<h3>9.3.2 SAT 覆盖范围（现场）</h3>
+<div class="code-block">
+<pre><code class="language-plain text">SAT 覆盖
+├─ 实际电网解列
+├─ 实际离网运行
+├─ 实际回并网
+├─ 构网退坡
+└─ 异常回退
+</code></pre>
+</div>
+<p>工程铁律：</p>
+<ul><li>不做 SAT 的并–离–并，等于没做</li><li>录像 + 日志 = 唯一可信证据</li></ul>
+<hr class="divider" />
+<h3>9.3.3 用例–状态映射示例</h3>
+<div class="code-block">
+<pre><code class="language-plain text">示例
+S1 → 跳闸验证
+S3 → 离网稳定运行
+S5 → 合闸闭环确认
+S6 → 构网退出与稳态
+</code></pre>
+</div>
+<hr class="divider" />
+<h3>9.4 责任与边界记录</h3>
+<p>(Responsibility & Boundary Definition)</p>
+<p>这是<strong>法律与工程的交汇点</strong>。</p>
+<hr class="divider" />
+<h3>9.4.1 控制责任边界</h3>
+<div class="code-block">
+<pre><code class="language-plain text">责任划分
+├─ 继电器：保护动作
+├─ EMS：控制与授权
+├─ PCS / DG：本地执行
+└─ 客户 / EPC：设备与安装
+</code></pre>
+</div>
+<p>工程原则：</p>
+<ul><li>EMS <strong>不对非授权路径负责</strong></li><li>EMS <strong>不承担硬件拒动责任</strong></li></ul>
+<hr class="divider" />
+<h3>9.4.2 合闸授权记录</h3>
+<div class="code-block">
+<pre><code class="language-plain text">合闸责任
+├─ 仅 EMS 可授权
+├─ 授权条件记录
+└─ 授权时间戳
+</code></pre>
+</div>
+<p>这是免责核心。</p>
+<hr class="divider" />
+<h3>9.4.3 人工干预记录</h3>
+<div class="code-block">
+<pre><code class="language-plain text">人工干预
+├─ 人员身份
+├─ 操作内容
+├─ 操作时间
+└─ 系统状态
+</code></pre>
+</div>
+<p>工程经验：</p>
+<ul><li>很多事故不是系统干的，是人干的</li><li>不记录 = 背锅</li></ul>
+<hr class="divider" />
+<h3>9.5 本章工程结论</h3>
+<ul><li>日志是系统的“黑匣子”</li><li>状态机没有日志 = 没有状态机</li><li>FAT / SAT 是工程交付底线</li><li>责任边界必须写进系统，而不是 PPT</li><li><strong>没有审计能力的 EMS，不具备商用资格</strong></li></ul>
+<hr class="divider" />
+<h2>全章总结（并–离–并控制总章）</h2>
+<ul><li>并–离–并是一个<strong>状态机问题，不是控制技巧</strong></li><li>跳闸靠保护，合闸靠授权</li><li>离网靠构网，回网靠退坡</li><li>稳定优先于连续</li><li>日志优先于解释</li></ul>
+<hr class="divider" />
+<h1>FAT / SAT 测试用例体系</h1>
+<p>(Factory & Site Acceptance Test Framework)</p>
+<hr class="divider" />
+<h2>1. 总体测试设计原则（工程级）</h2>
+<h3>1.1 FAT 与 SAT 的本质区别</h3>
+<div class="code-block">
+<pre><code class="language-plain text">FAT = 验证“系统是否按设计工作”
+SAT = 验证“系统在真实世界是否安全工作”
+</code></pre>
+</div>
+<p>工程红线：</p>
+<ul><li><strong>FAT 不依赖真实电网</strong></li><li><strong>SAT 必须在真实或等效电网条件下完成</strong></li><li>任何“只做 FAT 不做 SAT”的并–离–并系统，工程上不成立</li></ul>
+<hr class="divider" />
+<h3>1.2 测试覆盖原则</h3>
+<div class="code-block">
+<pre><code class="language-plain text">测试必须覆盖
+├─ 所有状态（S0–S6）
+├─ 所有关键动作（Trip / Close / Start / Stop）
+├─ 所有失败分支
+└─ 所有锁定逻辑
+</code></pre>
+</div>
+<hr class="divider" />
+<h3>1.3 判定原则</h3>
+<ul><li><strong>动作 ≠ 成功</strong></li><li><strong>必须有反馈闭环</strong></li><li><strong>超时、拒动、冲突必须被测试</strong></li></ul>
+<hr class="divider" />
+<h2>2. FAT – Factory Acceptance Test</h2>
+<p>（工厂验收测试）</p>
+<blockquote><pre style="white-space: pre-wrap; font-family: inherit; margin: 0;">FAT 的目标：</pre><p><strong>证明 EMS + 控制柜 + I/O + 状态机逻辑是“对的”</strong></p></blockquote>
+<hr class="divider" />
+<h3>2.1 FAT-00 基础与准备测试</h3>
+<h3>FAT-00-1 控制电源测试</h3>
+<div class="code-block">
+<pre><code class="language-plain text">目的：
+验证 ECP UPS 供电可靠
+
+步骤：
+1. 主电源断开
+2. UPS 接管供电
+3. EMS 不重启、不丢状态
+
+合格判据：
+- EMS 连续运行
+- 无异常复位
+</code></pre>
+</div>
+<hr class="divider" />
+<h3>FAT-00-2 I/O 点表一致性</h3>
+<div class="code-block">
+<pre><code class="language-plain text">目的：
+验证 DO / DI 定义与文档一致
+
+检查项：
+- DO1 = Trip
+- DO2 = Close
+- DI1 = 52a
+- DI2 = 52b
+
+合格判据：
+- 点位与逻辑完全一致
+</code></pre>
+</div>
+<hr class="divider" />
+<h3>2.2 FAT-01 S0 并网正常运行逻辑</h3>
+<h3>FAT-01-1 并网状态识别</h3>
+<div class="code-block">
+<pre><code class="language-plain text">模拟条件：
+- DI1 = 1
+- DI2 = 0
+
+期望：
+- 状态机 = S0
+- 并网策略启用
+</code></pre>
+</div>
+<hr class="divider" />
+<h3>FAT-01-2 S0 → S1 触发</h3>
+<div class="code-block">
+<pre><code class="language-plain text">触发方式：
+- 模拟继电器电网异常信号
+- 或模拟计量异常
+
+期望：
+- 状态机进入 S1
+- 不触发合闸
+</code></pre>
+</div>
+<hr class="divider" />
+<h3>2.3 FAT-02 S1 电网异常与跳闸</h3>
+<h3>FAT-02-1 继电器主跳闸路径</h3>
+<div class="code-block">
+<pre><code class="language-plain text">模拟：
+- 继电器跳闸信号
+
+期望：
+- PCC 状态变为开位（DI2 = 1）
+- EMS 记录“继电器主跳闸”
+</code></pre>
+</div>
+<hr class="divider" />
+<h3>FAT-02-2 EMS 冗余补跳</h3>
+<div class="code-block">
+<pre><code class="language-plain text">模拟：
+- 电网异常
+- DI 状态未变化
+
+期望：
+- EMS 触发 DO1
+- 记录补跳事件
+</code></pre>
+</div>
+<hr class="divider" />
+<h3>FAT-02-3 跳闸失败锁定</h3>
+<div class="code-block">
+<pre><code class="language-plain text">模拟：
+- DO1 输出
+- DI 状态不变
+
+期望：
+- 系统锁定
+- 禁止进入 S2
+</code></pre>
+</div>
+<hr class="divider" />
+<h3>2.4 FAT-03 S2 离网接管准备</h3>
+<h3>FAT-03-1 PCC 解列确认</h3>
+<div class="code-block">
+<pre><code class="language-plain text">条件：
+- DI2 = 1
+- DI1 = 0
+
+期望：
+- 允许进入 S2
+</code></pre>
+</div>
+<hr class="divider" />
+<h3>FAT-03-2 构网资源不可用</h3>
+<div class="code-block">
+<pre><code class="language-plain text">模拟：
+- BESS 通信中断
+
+期望：
+- 停留在 S2
+- 不进入 S3
+</code></pre>
+</div>
+<hr class="divider" />
+<h3>2.5 FAT-04 S3 离网运行逻辑（仿真）</h3>
+<h3>FAT-04-1 构网命令下发</h3>
+<div class="code-block">
+<pre><code class="language-plain text">模拟：
+- BESS 可用
+
+期望：
+- EMS 下发构网模式命令
+- 记录构网开始
+</code></pre>
+</div>
+<hr class="divider" />
+<h3>FAT-04-2 SOC 触发 DG 启动判据</h3>
+<div class="code-block">
+<pre><code class="language-plain text">模拟：
+- SOC &lt; 预警线
+
+期望：
+- EMS 生成 DG 启动准备事件
+（FAT 中不要求真实启动）
+</code></pre>
+</div>
+<hr class="divider" />
+<h3>2.6 FAT-05 S4 回并网准备</h3>
+<h3>FAT-05-1 电网恢复感知</h3>
+<div class="code-block">
+<pre><code class="language-plain text">模拟：
+- 电网恢复信号
+- 稳定计时完成
+
+期望：
+- 进入 S4
+</code></pre>
+</div>
+<hr class="divider" />
+<h3>FAT-05-2 C1–C7 许可冻结</h3>
+<div class="code-block">
+<pre><code class="language-plain text">期望：
+- 生成合闸许可快照
+- 快照 ID 可追溯
+</code></pre>
+</div>
+<hr class="divider" />
+<h3>2.7 FAT-06 S5 合闸执行</h3>
+<h3>FAT-06-1 合闸允许状态验证</h3>
+<div class="code-block">
+<pre><code class="language-plain text">条件：
+- 状态机 = S5
+- 许可有效
+
+期望：
+- 允许 DO2
+</code></pre>
+</div>
+<hr class="divider" />
+<h3>FAT-06-2 合闸脉冲验证</h3>
+<div class="code-block">
+<pre><code class="language-plain text">检查：
+- DO2 为脉冲输出
+- 无持续上电
+</code></pre>
+</div>
+<hr class="divider" />
+<h3>FAT-06-3 合闸失败处理</h3>
+<div class="code-block">
+<pre><code class="language-plain text">模拟：
+- DI 状态不变化
+
+期望：
+- 合闸失败
+- 系统锁定
+</code></pre>
+</div>
+<hr class="divider" />
+<h3>2.8 FAT-07 S6 并网后退坡</h3>
+<h3>FAT-07-1 BESS 构网退出逻辑</h3>
+<div class="code-block">
+<pre><code class="language-plain text">期望：
+- 控制模式切换命令正确
+- 无瞬断
+</code></pre>
+</div>
+<hr class="divider" />
+<h3>FAT-07-2 DG 卸载命令</h3>
+<div class="code-block">
+<pre><code class="language-plain text">期望：
+- 先卸载
+- 再停机（逻辑层）
+</code></pre>
+</div>
+<hr class="divider" />
+<h3>2.9 FAT-08 日志与审计</h3>
+<h3>FAT-08-1 状态迁移日志</h3>
+<div class="code-block">
+<pre><code class="language-plain text">检查：
+- S0 → S6 全路径可追溯
+</code></pre>
+</div>
+<hr class="divider" />
+<h3>FAT-08-2 动作证据链</h3>
+<div class="code-block">
+<pre><code class="language-plain text">检查：
+- 每个 DO 都有 DI 对应
+</code></pre>
+</div>
+<hr class="divider" />
+<h2>3. SAT – Site Acceptance Test</h2>
+<p>（现场验收测试）</p>
+<blockquote><pre style="white-space: pre-wrap; font-family: inherit; margin: 0;">SAT 的目标：</pre><p><strong>证明系统在真实电网、真实负载、真实扰动下是“安全的”</strong></p></blockquote>
+<hr class="divider" />
+<h3>3.1 SAT-01 实际并网 → 解列</h3>
+<div class="code-block">
+<pre><code class="language-plain text">操作：
+- 人为制造电网掉电
+
+期望：
+- 继电器毫秒级跳闸
+- EMS 识别并记录
+</code></pre>
+</div>
+<hr class="divider" />
+<h3>3.2 SAT-02 实际离网构网</h3>
+<div class="code-block">
+<pre><code class="language-plain text">期望：
+- PCC 已解列
+- BESS 成功构网
+- 关键负载不掉电
+</code></pre>
+</div>
+<hr class="divider" />
+<h3>3.3 SAT-03 SOC 触发 DG</h3>
+<div class="code-block">
+<pre><code class="language-plain text">操作：
+- 人为降低 SOC
+
+期望：
+- DG 启动
+- 平滑并联
+</code></pre>
+</div>
+<hr class="divider" />
+<h3>3.4 SAT-04 离网长时运行</h3>
+<div class="code-block">
+<pre><code class="language-plain text">验证：
+- 电压 / 频率稳定
+- 无异常保护动作
+</code></pre>
+</div>
+<hr class="divider" />
+<h3>3.5 SAT-05 电网恢复 → 回并网</h3>
+<div class="code-block">
+<pre><code class="language-plain text">操作：
+- 恢复电网
+
+期望：
+- 稳定计时
+- 进入 S4
+</code></pre>
+</div>
+<hr class="divider" />
+<h3>3.6 SAT-06 合闸执行</h3>
+<div class="code-block">
+<pre><code class="language-plain text">期望：
+- 仅 EMS 发起合闸
+- 52a/52b 闭环确认
+</code></pre>
+</div>
+<hr class="divider" />
+<h3>3.7 SAT-07 并网后退坡</h3>
+<div class="code-block">
+<pre><code class="language-plain text">验证：
+- BESS 退出构网
+- DG 卸载并停机
+</code></pre>
+</div>
+<hr class="divider" />
+<h3>3.8 SAT-08 故障回退</h3>
+<div class="code-block">
+<pre><code class="language-plain text">模拟：
+- 合闸后异常
+
+期望：
+- 再次解列
+- 事件完整记录
+</code></pre>
+</div>
+<hr class="divider" />
+<h2>4. 工程交付结论（非常重要）</h2>
+<ul><li><strong>FAT 证明“你没写错程序”</strong></li><li><strong>SAT 证明“你没害死人”</strong></li><li>并–离–并系统：</li><li>这套测试清单 <strong>可以直接写进合同 / 技术附件</strong></li></ul>
+<hr class="divider" />
+<h1>《Microgrid Grid-Connected / Islanded / Reconnection Control Technical Specification》</h1>
+<p><strong>文件性质</strong>：</p>
+<p>Engineering Control & Protection Technical Specification</p>
+<p><strong>适用对象</strong>：</p>
+<ul><li>EPC Contractor</li><li>Utility / Interconnection Reviewer</li><li>Owner’s Engineer</li><li>Commissioning Authority</li></ul>
+<p><strong>适用系统</strong>：</p>
+<ul><li>Grid-Connected Microgrid</li><li>Island-Capable Microgrid</li><li>BESS + DG + PV Hybrid Systems</li></ul>
+<hr class="divider" />
+<h2>1. Scope & Purpose（适用范围与目的）</h2>
+<h3>1.1 Scope</h3>
+<p>This specification defines the <strong>engineering-level control, protection, and verification requirements</strong> for a microgrid system capable of:</p>
+<ul><li>Grid-connected operation</li><li>Autonomous islanded operation</li><li>Controlled reconnection to utility grid</li></ul>
+<p>including <strong>trip, islanding, grid-forming, reconnection, and post-reconnection ramp-down</strong> behaviors.</p>
+<hr class="divider" />
+<h3>1.2 Purpose</h3>
+<p>The purpose of this document is to ensure that:</p>
+<ul><li>Islanding is achieved through <strong>primary protection with redundant supervision</strong></li><li>Reconnection is executed only through <strong>explicit authorization and closed-loop confirmation</strong></li><li>All grid ↔ island ↔ grid transitions are:</li></ul>
+<hr class="divider" />
+<h2>2. System Boundary & Responsibility Definition</h2>
+<h3>2.1 Functional Responsibility Boundary</h3>
+<div class="code-block">
+<pre><code class="language-plain text">Protection Layer:
+- Anti-islanding relay
+- Primary fault detection
+- Mandatory trip authority
+
+Control Layer:
+- EMS (Energy Management System)
+- Supervisory logic
+- Close authorization authority
+
+Execution Layer:
+- PCC circuit breaker
+- PCS / BESS controller
+- DG controller
+</code></pre>
+</div>
+<hr class="divider" />
+<h3>2.2 Authority Definition (Non-Negotiable)</h3>
+<ul><li><strong>Trip Authority</strong></li><li><strong>Close Authority</strong></li></ul>
+<hr class="divider" />
+<h2>3. PCC Breaker I/O Definition</h2>
+<h3>3.1 Mandatory I/O Mapping</h3>
+<div class="table-wrapper">
+<table class="notion-table">
+<thead>
+<tr><th>Signal</th><th>Function</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td>DO1</td><td>Trip</td><td>Shunt Trip Coil</td></tr><tr><td>DO2</td><td>Close</td><td>Close Coil</td></tr><tr><td>DI1</td><td>52a</td><td>Breaker Closed Feedback</td></tr><tr><td>DI2</td><td>52b</td><td>Breaker Open Feedback</td></tr>
+</tbody>
+</table>
+</div>
+<hr class="divider" />
+<h3>3.2 Feedback Integrity Rules</h3>
+<ul><li>52a and 52b shall never be simultaneously asserted</li><li>Any feedback conflict shall immediately trigger system lockout</li><li>No breaker state shall be assumed without DI confirmation</li></ul>
+<hr class="divider" />
+<h2>4. State Machine Control Framework (Mandatory)</h2>
+<h3>4.1 Defined States</h3>
+<div class="code-block">
+<pre><code class="language-plain text">S0 – Grid-Connected Normal Operation
+S1 – Grid Abnormality &amp; Fast Disconnection
+S2 – Island Takeover Preparation
+S3 – Islanded Operation
+S4 – Reconnection Preparation
+S5 – Close Execution &amp; Verification
+S6 – Post-Reconnection Ramp-Down &amp; Recovery
+</code></pre>
+</div>
+<hr class="divider" />
+<h3>4.2 State Transition Rules</h3>
+<ul><li>State transitions shall be <strong>sequential and non-skippable</strong></li><li>Any abnormal condition shall force:</li></ul>
+<hr class="divider" />
+<h2>5. Islanding Control Requirements</h2>
+<h3>5.1 Primary Trip Path</h3>
+<ul><li>Grid abnormality detected by protection relay</li><li>Relay shall trip PCC breaker within protection time requirement</li></ul>
+<hr class="divider" />
+<h3>5.2 EMS Redundant Supervised Trip</h3>
+<p>If PCC breaker does not open within defined timeout:</p>
+<ul><li>EMS shall issue redundant trip via DO1</li><li>Failure to open shall trigger lockout</li></ul>
+<hr class="divider" />
+<h3>5.3 Island Entry Qualification</h3>
+<p>System shall not enter islanded operation unless:</p>
+<ul><li>PCC breaker open state confirmed (52b)</li><li>Control power available</li><li>At least one grid-forming resource available</li></ul>
+<hr class="divider" />
+<h2>6. Islanded Operation Requirements</h2>
+<h3>6.1 Grid-Forming Priority</h3>
+<ul><li>BESS shall be the default grid-forming source</li><li>DG may supplement based on SOC thresholds</li></ul>
+<hr class="divider" />
+<h3>6.2 SOC-Based DG Coordination</h3>
+<ul><li>SOC warning threshold: initiate DG preparation</li><li>SOC minimum threshold: mandatory DG start</li></ul>
+<hr class="divider" />
+<h3>6.3 Protection Adaptation</h3>
+<ul><li>Island-specific voltage and frequency limits shall apply</li><li>Grid-following strategies shall be frozen</li></ul>
+<hr class="divider" />
+<h2>7. Reconnection Preparation Requirements</h2>
+<h3>7.1 Grid Recovery Validation</h3>
+<p>Grid recovery shall be confirmed by:</p>
+<ul><li>Protection relay measurement</li><li>Independent metering confirmation</li><li>Stability time window verification</li></ul>
+<hr class="divider" />
+<h3>7.2 Island Stability Requirement</h3>
+<p>Before reconnection:</p>
+<ul><li>Island voltage and frequency shall be stable</li><li>No ongoing transients or oscillations permitted</li></ul>
+<hr class="divider" />
+<h3>7.3 Close Permission Snapshot (C1–C7)</h3>
+<ul><li>All close conditions shall be collected and frozen</li><li>No real-time recalculation allowed during execution</li></ul>
+<hr class="divider" />
+<h2>8. Close Execution Requirements (Critical)</h2>
+<h3>8.1 Close Authorization</h3>
+<ul><li>Close command may only be issued in S5</li><li>Close command shall be pulse-based</li><li>Continuous close output is prohibited</li></ul>
+<hr class="divider" />
+<h3>8.2 Closed-Loop Verification</h3>
+<ul><li>Breaker closed state must be confirmed by 52a</li><li>Timeout or mismatch shall be treated as failure</li></ul>
+<hr class="divider" />
+<h3>8.3 Failure Handling</h3>
+<p>Any of the following shall result in immediate lockout:</p>
+<ul><li>Refusal to close</li><li>Half-closed / ambiguous feedback</li><li>Immediate post-close protection operation</li></ul>
+<hr class="divider" />
+<h2>9. Post-Reconnection Ramp-Down</h2>
+<h3>9.1 Grid-Forming Exit</h3>
+<ul><li>BESS shall smoothly transition from grid-forming to grid-following</li><li>Droop participation shall be gradually reduced to zero</li></ul>
+<hr class="divider" />
+<h3>9.2 DG Unloading & Shutdown</h3>
+<ul><li>DG shall unload power before shutdown</li><li>Reverse power protection shall be enforced</li></ul>
+<hr class="divider" />
+<h3>9.3 Strategy Restoration</h3>
+<p>Strategies shall be restored in sequence:</p>
+<ol><li>Protection and safety strategies</li><li>Stability strategies</li><li>Optimization strategies</li></ol>
+<hr class="divider" />
+<h2>10. Logging, Audit & Acceptance Testing</h2>
+<h3>10.1 Mandatory Logging</h3>
+<ul><li>All state transitions</li><li>All trip and close actions</li><li>All failures and lockouts</li></ul>
+<p>Logs shall be append-only and auditable.</p>
+<hr class="divider" />
+<h3>10.2 FAT / SAT Requirement</h3>
+<ul><li>FAT shall validate logic, I/O, and closed-loop behavior</li><li>SAT shall validate real-world grid/island transitions</li></ul>
+<p>No system shall be accepted without documented FAT and SAT completion.</p>
+<hr class="divider" />
+<h2>11. Engineering Liability Boundary (Very Important)</h2>
+<ul><li>EMS responsibility is limited to authorized control paths</li><li>EMS assumes no liability for:</li></ul>
+<hr class="divider" />
+<h1>工程使用建议（给你，非常关键）</h1>
+<ol><li><strong>把这一份作为“Technical Specification – Mandatory”</strong></li><li><strong>FAT / SAT 清单作为强制交付物</strong></li><li><strong>任何偏离此规范的设计</strong></li></ol>
+<hr class="divider" />
+<h1>Grid–Islanding–Reconnection Control</h1>
+<h2>IEEE 1547 / Rule 21 Compliance Mapping</h2>
+<p><strong>Document Type</strong>: Compliance & Traceability Matrix</p>
+<p><strong>Audience</strong>:</p>
+<ul><li>Utility Interconnection Engineer</li><li>Protection Engineer</li><li>Rule 21 / IEEE 1547 Reviewer</li><li>Owner’s Engineer</li></ul>
+<hr class="divider" />
+<h2>1. 映射说明（Reviewer 必读）</h2>
+<h3>1.1 映射原则</h3>
+<ul><li>本系统采用 <strong>Protection-led Islanding + EMS Supervised Control</strong></li><li><strong>跳闸权 = 保护装置</strong></li><li><strong>合闸权 = EMS（唯一授权）</strong></li><li>所有并–离–并动作：</li></ul>
+<blockquote><pre style="white-space: pre-wrap; font-family: inherit; margin: 0;">⚠️ 重要声明（建议原文保留）</pre><p><em>This system does not rely on EMS for primary protection functions.All anti-islanding protection functions are implemented by certified protection relays in accordance with IEEE 1547.</em></p></blockquote>
+<p>这句话是 <strong>Utility 放行的关键句</strong>。</p>
+<hr class="divider" />
+<h2>2. IEEE 1547-2018 核心条款映射</h2>
+<hr class="divider" />
+<h3>2.1 IEEE 1547 Clause 4.2 – Cease to Energize</h3>
+<p><strong>IEEE 1547 要求</strong></p>
+<p>DER shall cease to energize the Area EPS within the specified clearing time upon detection of abnormal conditions.</p>
+<p><strong>本系统实现方式</strong></p>
+<div class="table-wrapper">
+<table class="notion-table">
+<thead>
+<tr><th>项目</th><th>实现</th></tr>
+</thead>
+<tbody>
+<tr><td>主判据</td><td>防孤岛继电器</td></tr><tr><td>动作路径</td><td>继电器 → PCC 主断路器</td></tr><tr><td>动作时序</td><td>毫秒级（Protection Class）</td></tr><tr><td>EMS 角色</td><td>非主保护，仅监督</td></tr>
+</tbody>
+</table>
+</div>
+<p><strong>合规结论</strong></p>
+<p>✔ 满足 IEEE 1547 对 <strong>Cease to Energize</strong> 的强制要求</p>
+<p>✔ EMS 不参与 primary clearing time</p>
+<hr class="divider" />
+<h3>2.2 IEEE 1547 Clause 4.4 – Islanding</h3>
+<p><strong>IEEE 1547 要求</strong></p>
+<p>DER shall detect unintentional islanding and cease to energize.</p>
+<p><strong>本系统实现方式</strong></p>
+<div class="table-wrapper">
+<table class="notion-table">
+<thead>
+<tr><th>项目</th><th>实现</th></tr>
+</thead>
+<tbody>
+<tr><td>Islanding 检测</td><td>防孤岛继电器</td></tr><tr><td>解列方式</td><td>PCC 物理解列</td></tr><tr><td>EMS 角色</td><td>状态确认与记录</td></tr>
+</tbody>
+</table>
+</div>
+<p><strong>关键工程点（Reviewer 关心）</strong></p>
+<ul><li>Islanding detection <strong>不依赖通信</strong></li><li>Islanding clearing <strong>不依赖 EMS 软件</strong></li></ul>
+<p><strong>合规结论</strong></p>
+<p>✔ 满足 unintentional islanding 要求</p>
+<p>✔ 符合 Utility “no software-only protection”原则</p>
+<hr class="divider" />
+<h3>2.3 IEEE 1547 Clause 4.10 – Reconnection</h3>
+<p><strong>IEEE 1547 要求</strong></p>
+<p>DER shall not reconnect until Area EPS is stable and reconnection criteria are satisfied.</p>
+<p><strong>本系统实现方式</strong></p>
+<div class="table-wrapper">
+<table class="notion-table">
+<thead>
+<tr><th>要求</th><th>对应机制</th></tr>
+</thead>
+<tbody>
+<tr><td>电网稳定</td><td>继电器 + 计量双路径确认</td></tr><tr><td>稳定时间</td><td>S4 稳定窗口计时</td></tr><tr><td>合闸控制</td><td>EMS 唯一授权</td></tr><tr><td>反馈确认</td><td>52a / 52b 闭环</td></tr>
+</tbody>
+</table>
+</div>
+<p><strong>关键声明（非常重要）</strong></p>
+<blockquote><pre style="white-space: pre-wrap; font-family: inherit; margin: 0;">Reconnection is explicitly prohibited unless all reconnection conditions are validated and frozen prior to execution.</pre></blockquote>
+<p><strong>合规结论</strong></p>
+<p>✔ 满足 IEEE 1547 Reconnection 条款</p>
+<p>✔ 明确禁止自动 / 盲目重合闸</p>
+<hr class="divider" />
+<h3>2.4 IEEE 1547 Clause 4.13 – Control & Monitoring</h3>
+<p><strong>IEEE 1547 要求</strong></p>
+<p>DER shall provide monitoring and control capability.</p>
+<p><strong>本系统实现方式</strong></p>
+<div class="table-wrapper">
+<table class="notion-table">
+<thead>
+<tr><th>项目</th><th>实现</th></tr>
+</thead>
+<tbody>
+<tr><td>状态监测</td><td>PCC 状态、频率、电压</td></tr><tr><td>控制能力</td><td>EMS Supervisory Control</td></tr><tr><td>安全边界</td><td>不越权保护</td></tr>
+</tbody>
+</table>
+</div>
+<p><strong>合规结论</strong></p>
+<p>✔ EMS 作为 supervisory control，完全合规</p>
+<p>✔ 不承担 primary protection 责任</p>
+<hr class="divider" />
+<h2>3. IEEE 1547 Clause 5 – Interoperability</h2>
+<h3>3.1 功能独立性</h3>
+<div class="table-wrapper">
+<table class="notion-table">
+<thead>
+<tr><th>要求</th><th>本系统</th></tr>
+</thead>
+<tbody>
+<tr><td>Protection 独立</td><td>是</td></tr><tr><td>Control 可配置</td><td>是</td></tr><tr><td>Failure Safe</td><td>是</td></tr>
+</tbody>
+</table>
+</div>
+<hr class="divider" />
+<h3>3.2 Fail-Safe 行为</h3>
+<div class="code-block">
+<pre><code class="language-plain text">任何以下情况 → 解列 + 锁定
+├─ 通信中断
+├─ 反馈冲突
+├─ 合闸失败
+└─ 状态不一致
+</code></pre>
+</div>
+<p>✔ 符合 IEEE 1547 Fail-Safe 原则</p>
+<hr class="divider" />
+<h2>4. California Rule 21 映射（如果适用）</h2>
+<hr class="divider" />
+<h3>4.1 Rule 21 – Section H (Protection)</h3>
+<div class="table-wrapper">
+<table class="notion-table">
+<thead>
+<tr><th>Rule 21 要求</th><th>实现</th></tr>
+</thead>
+<tbody>
+<tr><td>Anti-Islanding</td><td>继电器</td></tr><tr><td>Clearing Time</td><td>继电器满足</td></tr><tr><td>EMS 非主保护</td><td>明确</td></tr>
+</tbody>
+</table>
+</div>
+<p>✔ 完全符合 Rule 21 Protection 要求</p>
+<hr class="divider" />
+<h3>4.2 Rule 21 – Section I (Reconnection)</h3>
+<div class="table-wrapper">
+<table class="notion-table">
+<thead>
+<tr><th>Rule 21 要求</th><th>实现</th></tr>
+</thead>
+<tbody>
+<tr><td>Utility 电网稳定</td><td>S4 稳定计时</td></tr><tr><td>手动/受控重连</td><td>EMS 授权</td></tr><tr><td>防自动重合</td><td>禁止</td></tr>
+</tbody>
+</table>
+</div>
+<p>✔ Reviewer 通常 <strong>非常喜欢</strong> 这种设计</p>
+<hr class="divider" />
+<h2>5. Utility Reviewer 关注点逐条回应（实战）</h2>
+<h3>Q1：EMS 会不会影响保护动作？</h3>
+<blockquote><pre style="white-space: pre-wrap; font-family: inherit; margin: 0;">回答：不会。保护完全由认证继电器执行，EMS 仅监督。</pre></blockquote>
+<h3>Q2：如果 EMS 死机怎么办？</h3>
+<blockquote><pre style="white-space: pre-wrap; font-family: inherit; margin: 0;">回答：系统保持解列状态，无法合闸，Fail-Safe。</pre></blockquote>
+<h3>Q3：有没有自动重合闸？</h3>
+<blockquote><pre style="white-space: pre-wrap; font-family: inherit; margin: 0;">回答：没有。所有合闸必须经过 EMS 明确授权。</pre></blockquote>
+<h3>Q4：是否有证据链？</h3>
+<blockquote><pre style="white-space: pre-wrap; font-family: inherit; margin: 0;">回答：所有 Trip / Close 具备 DI 反馈与日志。</pre></blockquote>
+<hr class="divider" />
+<h2>6. 可直接放进 Interconnection Package 的总结段落（推荐原文）</h2>
+<blockquote><pre style="white-space: pre-wrap; font-family: inherit; margin: 0;">The microgrid employs protection-led islanding and EMS-supervised reconnection.Anti-islanding protection is implemented by certified protection relays in full compliance with IEEE 1547 and applicable utility requirements.The EMS does not perform primary protection functions and cannot independently energize the Area EPS.All reconnection actions are explicitly authorized, condition-validated, and feedback-confirmed.</pre></blockquote>
+<hr class="divider" />
+<h2>7. 工程结论（给你）</h2>
+<ul><li>你这套设计：</li><li>Reviewer 最怕的三件事：</li><li>你这套 <strong>三件事全都规避了</strong></li></ul>
+<hr class="divider" />
+<h1>Interconnection Compliance Statement</h1>
+<h2>Grid–Islanding–Reconnection Control</h2>
+<p><strong>Project</strong>: Microgrid with BESS / DG / PV</p>
+<p><strong>System Role</strong>: Grid-Connected and Island-Capable Microgrid</p>
+<p><strong>Applicable Standards</strong>: IEEE 1547-2018, California Rule 21 (if applicable)</p>
+<hr class="divider" />
+<h2>1. Statement of Compliance</h2>
+<p>This document certifies that the microgrid system complies with all applicable interconnection and protection requirements related to <strong>islanding detection, cease-to-energize behavior, controlled reconnection, and post-reconnection operation</strong>, as defined by IEEE 1547-2018 and relevant utility interconnection rules.</p>
+<hr class="divider" />
+<h2>2. Protection and Islanding Compliance</h2>
+<ul><li><strong>Primary anti-islanding protection</strong> is implemented using certified protection relays in accordance with IEEE 1547 requirements.</li><li>Islanding detection and clearing <strong>do not rely on EMS software, communication links, or supervisory logic</strong>.</li><li>Upon detection of abnormal grid conditions, the protection relay <strong>directly trips the PCC circuit breaker</strong> within the required clearing time.</li><li>The EMS does <strong>not</strong> perform primary protection functions and does <strong>not</strong> affect protection clearing times.</li></ul>
+<p><strong>Compliance Reference</strong>:</p>
+<p>IEEE 1547-2018 Clauses 4.2, 4.4</p>
+<hr class="divider" />
+<h2>3. Cease-to-Energize Behavior</h2>
+<ul><li>The system ceases to energize the Area EPS through <strong>physical disconnection at the PCC breaker</strong>.</li><li>Breaker open status is verified using <strong>hardwired auxiliary contacts (52a/52b)</strong>.</li><li>Any failure to achieve confirmed disconnection results in system lockout and alarm.</li></ul>
+<p><strong>Compliance Reference</strong>:</p>
+<p>IEEE 1547-2018 Clause 4.2</p>
+<hr class="divider" />
+<h2>4. Reconnection Control and Authorization</h2>
+<ul><li><strong>Reconnection to the utility grid is explicitly prohibited</strong> unless all reconnection conditions are validated.</li><li>The EMS is the <strong>sole authorized entity</strong> permitted to issue a PCC close command.</li><li>No automatic or autonomous reclosing functions are enabled.</li><li>Reconnection conditions are:</li><li>All close commands are executed as <strong>pulse-based outputs</strong> and require <strong>positive breaker feedback confirmation</strong>.</li></ul>
+<p><strong>Compliance Reference</strong>:</p>
+<p>IEEE 1547-2018 Clause 4.10</p>
+<p>California Rule 21 Section I (if applicable)</p>
+<hr class="divider" />
+<h2>5. Fail-Safe and Abnormal Condition Handling</h2>
+<ul><li>Loss of EMS communication, controller failure, or control power loss <strong>cannot result in unintended energization of the Area EPS</strong>.</li><li>Any of the following conditions immediately force disconnection and lockout:</li><li>Manual breaker operation or unauthorized control paths are outside the EMS control boundary and responsibility.</li></ul>
+<p><strong>Compliance Reference</strong>:</p>
+<p>IEEE 1547-2018 Clause 5 (Interoperability & Fail-Safe Behavior)</p>
+<hr class="divider" />
+<h2>6. Logging, Audit, and Verification</h2>
+<ul><li>All islanding, reconnection, and abnormal events are:</li><li>All trip and close actions include <strong>command issuance, feedback verification, and result classification</strong>.</li><li>Factory Acceptance Testing (FAT) and Site Acceptance Testing (SAT) are mandatory and documented prior to system commissioning.</li></ul>
+<hr class="divider" />
+<h2>7. Responsibility and Liability Boundary</h2>
+<ul><li>Protection relays retain full authority for primary protection and islanding functions.</li><li>The EMS operates strictly as a <strong>supervisory control system</strong>.</li><li>The EMS cannot independently energize the Area EPS.</li><li>The EMS assumes no responsibility for:</li></ul>
+<hr class="divider" />
+<h2>8. Declaration</h2>
+<p>The undersigned certifies that the described microgrid control and protection system is designed and implemented in compliance with applicable interconnection requirements and follows protection-led islanding with EMS-supervised reconnection principles.</p>
+<hr class="divider" />
+<p><strong>Prepared by</strong>:</p>
+<p>Energize Solutions Inc.</p>
+<p><strong>System Role</strong>: EMS & Control Architecture Provider</p>
+<p><strong>Date</strong>: ____________________</p>
+<p><strong>Signature</strong>: ____________________</p>
+<hr class="divider" />
+        </div>
+
+        <div class="footer">
+            <a href="/" class="back-link">&larr; Back to Homepage</a>
+            <div class="timestamp">Last updated: 2026-02-14 11:55:18</div>
+        </div>
+    </div>
+
+    <script>
+    // 实时搜索功能
+    (function() {
+        const searchInput = document.getElementById('searchInput');
+        const searchResults = document.getElementById('searchResults');
+        const tableRows = document.querySelectorAll('.doc-table tbody tr');
+        
+        if (!searchInput || tableRows.length === 0) return;
+        
+        searchInput.addEventListener('input', function() {
+            const query = this.value.trim().toLowerCase();
+            let visibleCount = 0;
+            
+            tableRows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                
+                if (query === '' || text.includes(query)) {
+                    row.classList.remove('hidden');
+                    row.classList.add('match');
+                    visibleCount++;
+                } else {
+                    row.classList.add('hidden');
+                    row.classList.remove('match');
+                }
+            });
+            
+            // 更新搜索结果提示
+            if (query === '') {
+                searchResults.textContent = '';
+            } else {
+                searchResults.textContent = `${visibleCount} results found`;
+            }
+            
+            // 如果没有匹配，移除高亮
+            if (query === '') {
+                tableRows.forEach(row => row.classList.remove('match'));
+            }
+        });
+        
+        // 清除按钮（可选）
+        searchInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                this.value = '';
+                this.dispatchEvent(new Event('input'));
+                this.blur();
+            }
+        });
+    })();
+    </script>
+</body>
+</html>

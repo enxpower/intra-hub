@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Publish B - INTRA-HUB</title>
+    <style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    line-height: 1.6;
+    color: #333;
+    background: #f5f5f5;
+    padding: 20px;
+}
+
+.container {
+    max-width: 900px;
+    margin: 0 auto;
+    background: white;
+    padding: 40px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    border-radius: 8px;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 30px;
+    padding-bottom: 10px;
+}
+
+.header-left {
+    flex: 1;
+}
+
+.header-right {
+    margin-left: 40px;
+    text-align: right;
+    flex-shrink: 0;
+}
+
+.doc-title {
+    font-size: 2em;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin-bottom: 10px;
+}
+
+.doc-id {
+    font-size: 0.9em;
+    color: #666;
+    font-family: "Courier New", monospace;
+}
+
+.barcode {
+    max-width: 280px;
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+.metrics-bar {
+    display: flex;
+    gap: 30px;
+    padding: 15px 20px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    margin-bottom: 30px;
+    font-size: 0.9em;
+}
+
+.metric {
+    color: #555;
+}
+
+.document-properties {
+    margin-bottom: 30px;
+    padding: 20px;
+    background: #fafafa;
+    border-left: 4px solid #2196F3;
+    border-radius: 4px;
+}
+
+.document-properties h3 {
+    margin-bottom: 15px;
+    color: #2196F3;
+    font-size: 1.1em;
+}
+
+.properties-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.properties-table th {
+    text-align: left;
+    padding: 8px 12px;
+    background: #e8e8e8;
+    font-weight: 600;
+    width: 150px;
+}
+
+.properties-table td {
+    padding: 8px 12px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.document-content {
+    line-height: 1.8;
+}
+
+.document-content p {
+    margin-bottom: 1em;
+}
+
+.document-content h1, .document-content h2, .document-content h3 {
+    margin-top: 1.5em;
+    margin-bottom: 0.5em;
+    font-weight: 600;
+}
+
+.document-content h1 { font-size: 1.8em; }
+.document-content h2 { font-size: 1.5em; }
+.document-content h3 { font-size: 1.3em; }
+
+.document-content ul, .document-content ol {
+    margin-left: 2em;
+    margin-bottom: 1em;
+}
+
+.document-content li {
+    margin-bottom: 0.5em;
+}
+
+.document-content blockquote {
+    border-left: 4px solid #ddd;
+    padding-left: 20px;
+    margin: 1.5em 0;
+    color: #666;
+    font-style: italic;
+}
+
+.document-content code {
+    background: #f4f4f4;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: "Courier New", Courier, monospace;
+    font-size: 0.9em;
+}
+
+/* Notion-style code blocks - light background */
+.code-block {
+    margin: 1.5em 0;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid #e0e0e0;
+    background: #f7f7f7;
+}
+
+.code-header {
+    background: #e8e8e8;
+    color: #555;
+    padding: 8px 15px;
+    font-size: 0.85em;
+    border-bottom: 1px solid #d0d0d0;
+    font-weight: 500;
+}
+
+.code-block pre {
+    background: #f7f7f7;
+    color: #24292e;
+    padding: 20px;
+    overflow-x: auto;
+    margin: 0;
+    font-family: "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace;
+    font-size: 0.9em;
+    line-height: 1.5;
+}
+
+.code-block code {
+    background: transparent;
+    color: inherit;
+    padding: 0;
+}
+
+.callout {
+    display: flex;
+    gap: 12px;
+    padding: 15px;
+    margin: 1.5em 0;
+    background: #f0f7ff;
+    border-radius: 6px;
+    border-left: 4px solid #2196F3;
+}
+
+.callout-icon {
+    font-size: 1.5em;
+}
+
+.table-wrapper {
+    overflow-x: auto;
+    margin: 1.5em 0;
+}
+
+.notion-table {
+    width: 100%;
+    border-collapse: collapse;
+    border: 1px solid #ddd;
+    font-size: 0.95em;
+}
+
+.notion-table th, .notion-table td {
+    padding: 10px 12px;
+    border: 1px solid #ddd;
+    text-align: left;
+}
+
+.notion-table thead th {
+    background: #f5f5f5;
+    font-weight: 600;
+    color: #333;
+}
+
+.notion-table tbody th {
+    background: #fafafa;
+    font-weight: 600;
+}
+
+.notion-table tbody tr:hover {
+    background: #f9f9f9;
+}
+
+.table-placeholder {
+    text-align: center;
+    padding: 40px 20px !important;
+    color: #999;
+    font-style: italic;
+}
+
+.image-block {
+    margin: 1.5em 0;
+    text-align: center;
+}
+
+.image-block img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 4px;
+}
+
+.image-block figcaption {
+    margin-top: 10px;
+    font-size: 0.9em;
+    color: #666;
+}
+
+.file-download {
+    margin: 1em 0;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 6px;
+}
+
+.download-link {
+    color: #2196F3;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.download-link:hover {
+    text-decoration: underline;
+}
+
+.todo-item {
+    margin: 0.5em 0;
+    display: flex;
+    gap: 8px;
+}
+
+.todo-item.checked {
+    color: #999;
+    text-decoration: line-through;
+}
+
+.equation {
+    margin: 1.5em 0;
+    padding: 20px;
+    background: #fafafa;
+    border-radius: 4px;
+    text-align: center;
+    overflow-x: auto;
+    font-size: 1.1em;
+}
+
+.unknown-block {
+    padding: 10px;
+    margin: 1em 0;
+    background: #fff3cd;
+    border-left: 4px solid #ffc107;
+    border-radius: 4px;
+    font-size: 0.9em;
+}
+
+.render-error {
+    padding: 15px;
+    background: #ffe6e6;
+    border-left: 4px solid #f44336;
+    border-radius: 4px;
+    color: #c62828;
+    margin: 1em 0;
+}
+
+.footer {
+    margin-top: 50px;
+    padding-top: 20px;
+    border-top: 1px solid #e0e0e0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.back-link {
+    color: #2196F3;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.back-link:hover {
+    text-decoration: underline;
+}
+
+.timestamp {
+    font-size: 0.85em;
+    color: #999;
+}
+
+@media print {
+    body {
+        background: white;
+        padding: 0;
+    }
+
+    .container {
+        box-shadow: none;
+        padding: 20px;
+    }
+
+    .metrics-bar, .footer {
+        display: none;
+    }
+}
+</style>
+
+    <!-- KaTeX for mathematical equations -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" integrity="sha384-n8MVd4RsNIU0tAv4ct0nTaAbDJwPJzDEaqSD1odI+WdtXRGWt2kTvGFasHpSy3SV" crossorigin="anonymous">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" integrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0l8" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"
+        onload="renderMathInElement(document.body, {
+            delimiters: [
+                { left: '$$', right: '$$', display: true },
+                { left: '$',  right: '$',  display: false }
+            ]
+        });"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-left">
+                <h1 class="doc-title">Test Publish B</h1>
+                <div class="doc-id">Document ID: IH-2026-0001</div>
+            </div>
+            <div class="header-right">
+                <img src="data:image/png;base64,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" alt="Barcode: IH-2026-0001" class="barcode" />
+            </div>
+        </div>
+
+        <div class="metrics-bar">
+            <span class="metric"><strong>Views:</strong> 0</span>
+            <span class="metric"><strong>Downloads:</strong> 0</span>
+            <span class="metric"><strong>Shares:</strong> 0</span>
+        </div>
+
+        
+
+        <div class="document-content">
+            <p><strong>编制人：龚铁靖</strong></p>
+<p><strong>日期：2025年10月</strong></p>
+<hr class="divider" />
+<h2>一、背景说明</h2>
+<p>机器人有限公司目前由两位股东组成：</p>
+<div class="table-wrapper">
+<table class="notion-table">
+<thead>
+<tr><th>股东</th><th>出资金额（人民币）</th><th>占股比例</th><th>实际角色</th></tr>
+</thead>
+<tbody>
+<tr><td>岳学瑾（松竹亭公司）</td><td>600,000</td><td>60%</td><td>出资 + 部分经营管理</td></tr><tr><td>聚仁会（常工）</td><td>400,000</td><td>40%</td><td>出资 + 核心研发技术</td></tr>
+</tbody>
+</table>
+</div>
+<p>公司当前以技术研发为核心，但市场推广、产品运营及商业化仍处起步阶段。为加快产品落地与市场开拓，公司拟邀请<strong>龚铁靖</strong>加入，负责产品与市场业务，作为股东及核心经营合伙人。</p>
+<hr class="divider" />
+<h2>二、调整原则</h2>
+<p>为平衡<strong>出资与出力</strong>的贡献，建议采用“双层股权模型”：</p>
+<blockquote>总股权 = 资金股（60%） + 人力股（40%）总股权 = 资金股（60%） + 人力股（40%）总股权 = 资金股（60%） + 人力股（40%）总股权 = 资金股（60%） + 人力股（40%）总股权 = 资金股（60%） + 人力股（40%）总股权 = 资金股（60%） + 人力股（40%）总股权 = 资金股（60%） + 人力股（40%）总股权 = 资金股（60%） + 人力股（40%）总股权 = 资金股（60%） + 人力股（40%）总股权 = 资金股（60%） + 人力股（40%）总股权 = 资金股（60%） + 人力股（40%）总股权 = 资金股（60%） + 人力股（40%）总股权 = 资金股（60%） + 人力股（40%）总股权 = 资金股（60%） + 人力股（40%）总股权 = 资金股（60%） + 人力股（40%）总股权 = 资金股（60%） + 人力股（40%）总股权 = 资金股（60%） + 人力股（40%）总股权 = 资金股（60%） + 人力股（40%）</blockquote>
+<p>此模型可同时反映资金投入与经营贡献，兼顾公平与激励。</p>
+<hr class="divider" />
+<h2>三、出资与人力分配结构</h2>
+<h3>（1）资金股（占总股60%）</h3>
+<div class="table-wrapper">
+<table class="notion-table">
+<thead>
+<tr><th>股东</th><th>出资额</th><th>资金股比例</th><th>对应股份</th></tr>
+</thead>
+<tbody>
+<tr><td>岳学瑾</td><td>600,000</td><td>60%</td><td>60% × 60% = <strong>36%</strong></td></tr><tr><td>常工</td><td>400,000</td><td>40%</td><td>40% × 60% = <strong>24%</strong></td></tr><tr><td>龚铁靖</td><td>0</td><td>0%</td><td><strong>0%</strong></td></tr>
+</tbody>
+</table>
+</div>
+<hr class="divider" />
+<h3>（2）人力股（占总股40%）</h3>
+<div class="table-wrapper">
+<table class="notion-table">
+<thead>
+<tr><th>股东</th><th>出力权重</th><th>对应股份</th></tr>
+</thead>
+<tbody>
+<tr><td>岳学瑾</td><td>20%</td><td>20% × 40% = <strong>8%</strong></td></tr><tr><td>常工</td><td>40%</td><td>40% × 40% = <strong>16%</strong></td></tr><tr><td>龚铁靖</td><td>40%</td><td>40% × 40% = <strong>16%</strong></td></tr>
+</tbody>
+</table>
+</div>
+<hr class="divider" />
+<h3>（3）调整后总股权结构</h3>
+<div class="table-wrapper">
+<table class="notion-table">
+<thead>
+<tr><th>股东</th><th>资金股</th><th>人力股</th><th>合计占比</th></tr>
+</thead>
+<tbody>
+<tr><td>岳学瑾</td><td>36%</td><td>8%</td><td><strong>44%</strong></td></tr><tr><td>常工</td><td>24%</td><td>16%</td><td><strong>40%</strong></td></tr><tr><td>龚铁靖</td><td>0%</td><td>16%</td><td><strong>16%</strong></td></tr>
+</tbody>
+</table>
+</div>
+<hr class="divider" />
+<h2>四、授予与约定机制</h2>
+<p><strong>方案A：分期授予制（按业绩进度确认）</strong></p>
+<h3>1️⃣ 授予方式（可选两种方式，经三方协商确定）</h3>
+<ul><li>16% 股权作为「人力股」，在 3 年内逐步确认：</li></ul>
+<p><strong>方案B：一次性授予制（签约即生效）</strong></p>
+<ul><li>16% 股权于签署正式股东协议时一次性确认；</li><li>可附带最低服务期（如满两年不得主动退出），以确保公司运营稳定性。</li></ul>
+<hr class="divider" />
+<h3>2️⃣ 退出与回购条款</h3>
+<ul><li>若龚铁靖提前退出公司，人力股部分由公司或其他股东按名义价值回购；</li><li>若公司融资或股权变更，龚铁靖享有相应比例的<strong>优先认购权与防稀释权</strong>。</li></ul>
+<hr class="divider" />
+<h3>3️⃣ 决策与管理机制</h3>
+<ul><li>三方组成经营委员会（或董事会）；</li><li>重大事项（增资、股权转让、公司清算等）须三方书面同意；</li><li>日常经营由岳学瑾协调，龚铁靖主导市场与产品，常工主导研发技术。</li></ul>
+<hr class="divider" />
+<h2>五、实施意义</h2>
+<ol><li><strong>公平性</strong>：兼顾出资与贡献；</li><li><strong>激励性</strong>：核心人员利益与公司增长绑定；</li><li><strong>可扩展性</strong>：可延伸为未来员工持股或期权激励体系；</li><li><strong>稳定性</strong>：保持岳学瑾控股、常工技术主导、龚铁靖市场主导的平衡格局。</li></ol>
+<hr class="divider" />
+<h2>六、结论与建议</h2>
+<blockquote>调整后股权结构如下：</blockquote>
+<p>建议公司正式通过此股权结构方案，并在签署股东协议时确定采用**方案A（分期授予）<strong>或</strong>方案B（一次性授予）**的授予机制。</p>
+<hr class="divider" />
+<p><strong>编制人：</strong> 龚铁靖</p>
+<div class="code-block">
+<div class="code-header">
+<span class="language">markup</span>
+</div>
+<pre><code class="language-markup">总股权 = 资金股（60%） + 人力股（40%）总股权 = 资金股（60%） + 
+人力股（40%）总股权 = 资金股（60%） + 人力股（40%）总股权 = 资金股（60%） 
++ 人力股（40%）总股权 = 资金股（60%） + 人力股（40%）总股权 = 资金股（60%） + 人力股（40%）总股权 = 资金股（60%） + 人力股（40%）总股权 = 资金股（60%） + 人力股（40%）总股权 = 资金股（60%） + 人力股（40%）总股权 = 资金股（60%） + 人力股（40%）总股权 = 资金股（60%） + 人力股（40%）总股权 = 资金股（60%） + 人力股（40%）总股权 = 资金股（60%） + 人力股（40%）</code></pre>
+</div>
+<p><strong>审核人：</strong> 岳学瑾</p>
+<p><strong>复核人：</strong> 常工</p>
+<p>（本建议书仅供内部讨论参考，正式实施需经三方签署股东协议确认。）</p>
+<hr class="divider" />
+<h1><strong>《人力股协议》草案（含分期授予与一次性授予两种方案）</strong></h1>
+<p><strong>签署方：</strong> 机器人有限公司（以下简称“公司”）</p>
+<hr class="divider" />
+<h2>一、签署各方</h2>
+<ol><li><strong>甲方（公司控股方）</strong>：岳学瑾（松竹亭公司）</li><li><strong>乙方（公司股东、技术负责人）</strong>：常工（聚仁会）</li><li><strong>丙方（受授予人、产品与市场负责人）</strong>：龚铁靖</li></ol>
+<hr class="divider" />
+<h2>二、签署目的</h2>
+<p>鉴于：</p>
+<ol><li>公司为推进产品商业化、市场拓展及运营增长，拟吸纳丙方作为核心经营合伙人；</li><li>丙方虽未出资入股，但其将以人力、经验、市场资源及管理贡献作为出资等价价值；</li><li>各方本着公平、互信、长期合作的原则，就丙方取得公司股权的方式、条件及权利义务达成本协议。</li></ol>
+<hr class="divider" />
+<h2>三、授予标的与比例</h2>
+<p>经甲、乙双方一致同意，丙方获授予公司股权 <strong>16%（百分之十六）</strong>，来源于公司现有股东的出让或公司增发。</p>
+<p>具体由公司后续工商变更时确定。</p>
+<hr class="divider" />
+<h2>四、授予方式（两种方案，三方选择其一执行）</h2>
+<h3><strong>方案A：分期授予制</strong></h3>
+<ol><li>丙方所获 16% 股权分三期授予，具体条件如下：</li></ol>
+<div class="table-wrapper">
+<table class="notion-table">
+<thead>
+<tr><th>阶段</th><th>授予比例</th><th>授予条件</th></tr>
+</thead>
+<tbody>
+<tr><td>第一阶段</td><td>8%</td><td>丙方完成产品上市与首批客户签约；或完成公司规定的年度市场计划；</td></tr><tr><td>第二阶段</td><td>4%</td><td>丙方完成销售/出货目标，且公司市场营收达到约定标准；</td></tr><tr><td>第三阶段</td><td>4%</td><td>公司实现年度盈利或完成一轮融资；</td></tr>
+</tbody>
+</table>
+</div>
+<ol><li>每一阶段授予应经董事会确认，董事会通过后即生效；</li><li>若丙方在授予期内主动退出，公司有权按名义价值回购未生效部分股权。</li></ol>
+<hr class="divider" />
+<h3><strong>方案B：一次性授予制</strong></h3>
+<ol><li>丙方的 16% 股权在本协议签署后一次性确认并登记；</li><li>为保证公司经营稳定，丙方承诺自签署日起 <strong>服务期不少于两年</strong>；</li><li>若丙方在两年内主动离职或终止合作，公司有权按原始登记价回购全部股权或部分股权；</li><li>超过两年后退出，丙方享有自由转让权（但须遵守股东优先购买权条款）。</li></ol>
+<hr class="divider" />
+<h2>五、权利与义务</h2>
+<ol><li>丙方享有与股权比例对应的利润分配权、表决权及知情权；</li><li>丙方须积极履行市场拓展、品牌建设、商业合作、销售增长等职责；</li><li>丙方不得以任何形式从事与公司主营业务相竞争的项目；</li><li>公司须向丙方提供必要的业务支持、资源协调及数据透明度；</li><li>任何股权转让或增资，须经三方书面同意。</li></ol>
+<hr class="divider" />
+<h2>六、退出与回购条款</h2>
+<ol><li>若丙方主动退出或严重违反公司规章制度，</li><li>若公司经营方向、控制权发生变更，丙方享有防稀释权及优先认购权；</li><li>若公司被并购或上市，丙方持股按与其他股东相同条件结算。</li></ol>
+<hr class="divider" />
+<h2>七、保密与竞业禁止</h2>
+<ol><li>丙方在任职期间及离职后两年内，不得泄露公司商业秘密；</li><li>未经公司书面许可，不得以直接或间接方式参与竞争性业务；</li><li>违约方需承担赔偿责任，金额不少于公司年度净利润的 20%。</li></ol>
+<hr class="divider" />
+<h2>八、争议解决</h2>
+<ol><li>本协议适用中华人民共和国法律；</li><li>因本协议产生的争议，三方应先友好协商；</li><li>协商不成时，任何一方可向公司注册地有管辖权的人民法院提起诉讼。</li></ol>
+<hr class="divider" />
+<h2>九、其他条款</h2>
+<ol><li>本协议自三方签字或盖章之日起生效；</li><li>本协议一式叁份，三方各执壹份，具有同等法律效力；</li><li>若后续需工商变更、签署股东协议等法律文件，本协议作为依据之一。</li></ol>
+<hr class="divider" />
+<p><strong>甲方（岳学瑾）：</strong> _________________________</p>
+<p><strong>乙方（常工）：</strong> _________________________</p>
+<p><strong>丙方（龚铁靖）：</strong> _________________________</p>
+<p>签署日期：<strong>年____月____日
+签署地点：</strong>__________________</p>
+<p class="empty-paragraph">&nbsp;</p>
+<h2>1.2 微电网的三大不可逃避约束</h2>
+<p>微电网控制问题可被压缩为三条不可绕开的工程约束。</p>
+<h3>1.2.1 约束一：功率平衡（Power Balance）</h3>
+<p>在任意时间尺度（ms–s–min）：</p>
+<div class="equation">$$∑Psources(t)=∑Ploads(t)+Ploss(t)\sum P_{\text{sources}}(t) = \sum P_{\text{loads}}(t) + P_{\text{loss}}(t)$$</div>
+<p>工程解释：</p>
+<div class="code-block">
+<div class="code-header">
+<span class="language">plain text</span>
+</div>
+<pre><code class="language-plain text">- 不存在“先稳定、后补功率”
+- 功率守恒不是策略，是物理定律
+</code></pre>
+</div>
+<p>在仿真代码中，该约束体现为：</p>
+<div class="code-block">
+<div class="code-header">
+<span class="language">plain text</span>
+</div>
+<pre><code class="language-plain text">- 所有资源功率参与同一求和
+- 频率由不平衡积分得到
+- UI 不得掩盖不平衡
+</code></pre>
+</div>
+<hr class="divider" />
+<h3>1.2.2 约束二：惯量缺失（Low / Zero Inertia）</h3>
+<p>资源惯量对比（工程视角）：</p>
+<p class="empty-paragraph">&nbsp;</p>
+<div class="file-download"><a href="https://prod-files-secure.s3.us-west-2.amazonaws.com/c4e85084-00db-41be-aad2-9b26203a51ee/c666736b-56f3-4725-8254-767421f746a7/a95f360c-e512-4f5e-aff8-4808912c8b93_Ch78.pdf?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=ASIAZI2LB466WZVJ2S3F%2F20260209%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20260209T160902Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEMj%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQDON9x0MKnEyVY0VuY%2FkbxN%2BwnkoXWmRWNny6YOLBBI5AIgLqNhzq8Yy%2Bx1G2eXpJLZgD2yzJ6qdcfgkg4LSImb7bEqiAQIkf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARAAGgw2Mzc0MjMxODM4MDUiDOmk0y9doqXiRjES5ircA9SA5dqjJTBmdS1fXfeNPUp0WAnG3LBpHaLBf1z2YTdJ9Csk4d5CsMDqgndNPgA9LtVY5qgAVcuFnhG%2BbMmdxlOGKoOiQSj3FG3r3pRiJMg7J1B5ruXGD7%2BJZNYrjYj5elQk3GmOO5d3v5i1oJuVNHz35FVolz4vqnjjKg40XchMj7an1pKwxjb8LM%2Bl%2B%2FKC3ON1XZKDkpIERMVkWCFM54vWxzrQWXe61vsqaskWgKx0gonGYy1WBD2rlOCDZ%2FbwquSIxnZ0GrqoD0Eq%2Brf5qnKDsdH9ETsis2jVYYoy1CqPSeGb%2B%2BPpuHH0miaNvTK5oRIuDAC4w88KIwqkJ1iihz%2Fh7BqfCC7FB7u8SMdprTUW%2BNRqnPihfPNKO734tR41iW5t01oXHFTUSSCy%2Ff231hF1vi1Edtzy6CEv2KKYCUlAoaw4Hv0XB6VtRb6qjd%2F5Kn8YmmY40F0nXlIN9xBto6Y6Fug2E7x5rZyp1InT7vFCuTZt8MYv7eZ42X7qp7wmp9q%2FURRiIFShsSKQp3boG4MY468ad816tCild%2FYtqXHjt8y4EtFY4uYvflmTRcqWZ29AOa3Vd0213a0a6VJwp31ua6bUL%2BYeStHmsixavt17O3dNjoE7212yblLAMJX4p8wGOqUBD3RsIvppVH7RsB9PEg4YdZQHTAxft8I027z9V0e%2FlRyxktEmmqG0HwMP7syWxcER8ONNLLgJHi1mZuCc2elKECCYV3Eeh2u80ThZjajGQXGZ2c8D%2B0bedzCByUgPNdS6ewEMzzcHH6FxZMFPFSOlHkRGHRxtlv9CfxZ9HxHavVo6C%2ByLnEGzCPl6%2BB6oYQsHSGoOufHID2tKwWfCMVy0Wxy%2F3VLt&X-Amz-Signature=6c6b0dbe9acba4c4fa2f628cdc76b9f96afdb1a05bccf51610469942e32834c1&X-Amz-SignedHeaders=host&x-amz-checksum-mode=ENABLED&x-id=GetObject" download class="download-link">ðŸ“Ž Download File</a></div>
+<figure class="image-block"><img src="https://prod-files-secure.s3.us-west-2.amazonaws.com/c4e85084-00db-41be-aad2-9b26203a51ee/b7c322ce-5a2a-41b4-9ffe-cb335976cf68/index.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=ASIAZI2LB466WZVJ2S3F%2F20260209%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20260209T160902Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEMj%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQDON9x0MKnEyVY0VuY%2FkbxN%2BwnkoXWmRWNny6YOLBBI5AIgLqNhzq8Yy%2Bx1G2eXpJLZgD2yzJ6qdcfgkg4LSImb7bEqiAQIkf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARAAGgw2Mzc0MjMxODM4MDUiDOmk0y9doqXiRjES5ircA9SA5dqjJTBmdS1fXfeNPUp0WAnG3LBpHaLBf1z2YTdJ9Csk4d5CsMDqgndNPgA9LtVY5qgAVcuFnhG%2BbMmdxlOGKoOiQSj3FG3r3pRiJMg7J1B5ruXGD7%2BJZNYrjYj5elQk3GmOO5d3v5i1oJuVNHz35FVolz4vqnjjKg40XchMj7an1pKwxjb8LM%2Bl%2B%2FKC3ON1XZKDkpIERMVkWCFM54vWxzrQWXe61vsqaskWgKx0gonGYy1WBD2rlOCDZ%2FbwquSIxnZ0GrqoD0Eq%2Brf5qnKDsdH9ETsis2jVYYoy1CqPSeGb%2B%2BPpuHH0miaNvTK5oRIuDAC4w88KIwqkJ1iihz%2Fh7BqfCC7FB7u8SMdprTUW%2BNRqnPihfPNKO734tR41iW5t01oXHFTUSSCy%2Ff231hF1vi1Edtzy6CEv2KKYCUlAoaw4Hv0XB6VtRb6qjd%2F5Kn8YmmY40F0nXlIN9xBto6Y6Fug2E7x5rZyp1InT7vFCuTZt8MYv7eZ42X7qp7wmp9q%2FURRiIFShsSKQp3boG4MY468ad816tCild%2FYtqXHjt8y4EtFY4uYvflmTRcqWZ29AOa3Vd0213a0a6VJwp31ua6bUL%2BYeStHmsixavt17O3dNjoE7212yblLAMJX4p8wGOqUBD3RsIvppVH7RsB9PEg4YdZQHTAxft8I027z9V0e%2FlRyxktEmmqG0HwMP7syWxcER8ONNLLgJHi1mZuCc2elKECCYV3Eeh2u80ThZjajGQXGZ2c8D%2B0bedzCByUgPNdS6ewEMzzcHH6FxZMFPFSOlHkRGHRxtlv9CfxZ9HxHavVo6C%2ByLnEGzCPl6%2BB6oYQsHSGoOufHID2tKwWfCMVy0Wxy%2F3VLt&X-Amz-Signature=0ea6981ba8719003c569e986d8d1df703deddbd0b2a2de27e734a6045543a4e4&X-Amz-SignedHeaders=host&x-amz-checksum-mode=ENABLED&x-id=GetObject" alt="" /></figure>
+<p class="empty-paragraph">&nbsp;</p>
+        </div>
+
+        <div class="footer">
+            <a href="/" class="back-link">&larr; Back to Homepage</a>
+            <div class="timestamp">Last updated: 2026-02-09 16:10:24</div>
+        </div>
+    </div>
+</body>
+</html>

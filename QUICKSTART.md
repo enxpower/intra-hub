@@ -23,7 +23,7 @@ sudo ./setup.sh
 ### 第三步：配置 Notion 凭证
 
 ```bash
-sudo nano /opt/intra-hub/.env
+sudo nano /opt/intra-hub-v1.0/.env
 ```
 
 修改这两行：
@@ -37,16 +37,16 @@ NOTION_DATABASE_ID=2fa95c292b0e80b0a5b0f6a3d20b64f1
 ### 第四步：复制代码文件
 
 ```bash
-sudo cp -r ~/intra-hub-v1.0/sync /opt/intra-hub/
-sudo cp -r ~/intra-hub-v1.0/renderer /opt/intra-hub/
-sudo cp ~/intra-hub-v1.0/requirements.txt /opt/intra-hub/
-sudo cp ~/intra-hub-v1.0/install_scheduler.sh /opt/intra-hub/
+sudo cp -r ~/intra-hub-v1.0/sync /opt/intra-hub-v1.0/
+sudo cp -r ~/intra-hub-v1.0/renderer /opt/intra-hub-v1.0/
+sudo cp ~/intra-hub-v1.0/requirements.txt /opt/intra-hub-v1.0/
+sudo cp ~/intra-hub-v1.0/install_scheduler.sh /opt/intra-hub-v1.0/
 ```
 
 ### 第五步：安装 Python 依赖
 
 ```bash
-cd /opt/intra-hub
+cd /opt/intra-hub-v1.0
 source venv/bin/activate
 pip install -r requirements.txt
 deactivate
@@ -73,7 +73,7 @@ sudo systemctl reload nginx
 ### 第七步：安装定时任务
 
 ```bash
-cd /opt/intra-hub
+cd /opt/intra-hub-v1.0
 sudo ./install_scheduler.sh
 ```
 
@@ -140,31 +140,31 @@ sudo bash ~/intra-hub-v1.0/check_installation.sh
 ### 问题：同步报错 "NOTION_TOKEN not set"
 
 ```bash
-sudo cat /opt/intra-hub/.env  # 检查配置
-sudo nano /opt/intra-hub/.env  # 编辑配置
+sudo cat /opt/intra-hub-v1.0/.env  # 检查配置
+sudo nano /opt/intra-hub-v1.0/.env  # 编辑配置
 ```
 
 ### 问题：权限错误
 
 ```bash
-sudo chown -R www-data:www-data /opt/intra-hub/public/
-sudo chown -R www-data:www-data /opt/intra-hub/data/
-sudo chmod -R 755 /opt/intra-hub/
-sudo chmod 600 /opt/intra-hub/.env
+sudo chown -R www-data:www-data /opt/intra-hub-v1.0/public/
+sudo chown -R www-data:www-data /opt/intra-hub-v1.0/data/
+sudo chmod -R 755 /opt/intra-hub-v1.0/
+sudo chmod 600 /opt/intra-hub-v1.0/.env
 ```
 
 ### 问题：Nginx 404
 
 ```bash
 sudo nginx -t  # 测试配置
-ls -la /opt/intra-hub/public/  # 检查文件
+ls -la /opt/intra-hub-v1.0/public/  # 检查文件
 sudo systemctl restart nginx  # 重启服务
 ```
 
 ### 问题：Python 模块找不到
 
 ```bash
-cd /opt/intra-hub
+cd /opt/intra-hub-v1.0
 source venv/bin/activate
 pip install -r requirements.txt
 ```

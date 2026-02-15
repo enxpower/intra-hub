@@ -22,7 +22,7 @@ class MetricsManager:
     """Manages document metrics (views, downloads, shares)"""
 
     def __init__(self):
-        self.metrics_file = Path("/opt/intra-hub/data/metrics/metrics.json")
+        self.metrics_file = Path("/opt/intra-hub-v1.0/data/metrics/metrics.json")
         self.metrics_file.parent.mkdir(parents=True, exist_ok=True)
         self.metrics = self._load_metrics()
 
@@ -56,8 +56,8 @@ class HTMLRenderer:
     """Main HTML rendering engine"""
 
     def __init__(self):
-        self.cache_dir = Path("/opt/intra-hub/data/cache")
-        self.public_dir = Path("/opt/intra-hub/public")
+        self.cache_dir = Path("/opt/intra-hub-v1.0/data/cache")
+        self.public_dir = Path("/opt/intra-hub-v1.0/public")
         self.docs_dir = self.public_dir / "documents"
         self.static_dir = self.public_dir / "static"
 
@@ -250,56 +250,6 @@ class HTMLRenderer:
             <div class="timestamp">Last updated: @@TIMESTAMP@@</div>
         </div>
     </div>
-
-    <script>
-    // 实时搜索功能
-    (function() {
-        const searchInput = document.getElementById('searchInput');
-        const searchResults = document.getElementById('searchResults');
-        const tableRows = document.querySelectorAll('.doc-table tbody tr');
-        
-        if (!searchInput || tableRows.length === 0) return;
-        
-        searchInput.addEventListener('input', function() {
-            const query = this.value.trim().toLowerCase();
-            let visibleCount = 0;
-            
-            tableRows.forEach(row => {
-                const text = row.textContent.toLowerCase();
-                
-                if (query === '' || text.includes(query)) {
-                    row.classList.remove('hidden');
-                    row.classList.add('match');
-                    visibleCount++;
-                } else {
-                    row.classList.add('hidden');
-                    row.classList.remove('match');
-                }
-            });
-            
-            // 更新搜索结果提示
-            if (query === '') {
-                searchResults.textContent = '';
-            } else {
-                searchResults.textContent = `${visibleCount} results found`;
-            }
-            
-            // 如果没有匹配，移除高亮
-            if (query === '') {
-                tableRows.forEach(row => row.classList.remove('match'));
-            }
-        });
-        
-        // 清除按钮（可选）
-        searchInput.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                this.value = '';
-                this.dispatchEvent(new Event('input'));
-                this.blur();
-            }
-        });
-    })();
-    </script>
 </body>
 </html>
 """
@@ -325,101 +275,6 @@ class HTMLRenderer:
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-}
-
-
-/* 搜索容器 */
-.search-container {
-    max-width: 1400px;
-    margin: 0 auto 15px;
-    background: white;
-    padding: 20px 30px;
-    border-radius: 12px 12px 0 0;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-    position: relative;
-}
-
-.search-input {
-    width: 100%;
-    padding: 14px 45px 14px 20px;
-    font-size: 15px;
-    border: 1.5px solid #e0e0e0;
-    border-radius: 8px;
-    outline: none;
-    transition: all 0.3s ease;
-    font-family: inherit;
-    color: #2c3e50;
-}
-
-.search-input:focus {
-    border-color: #3498db;
-    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
-}
-
-.search-input::placeholder {
-    color: #95a5a6;
-}
-
-.search-icon {
-    position: absolute;
-    right: 45px;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 18px;
-    opacity: 0.5;
-    pointer-events: none;
-}
-
-.search-results {
-    position: absolute;
-    top: 100%;
-    right: 30px;
-    font-size: 13px;
-    color: #7f8c8d;
-    padding: 8px 0;
-}
-
-/* 高亮匹配行 */
-.doc-table tbody tr.hidden {
-    display: none;
-}
-
-.doc-table tbody tr.match {
-    background: #e8f4fd !important;
-}
-
-/* 移动端搜索 */
-@media (max-width: 768px) {
-    .search-container {
-        padding: 15px 20px;
-        border-radius: 8px 8px 0 0;
-    }
-    
-    .search-input {
-        padding: 12px 40px 12px 16px;
-        font-size: 14px;
-    }
-    
-    .search-icon {
-        right: 35px;
-        font-size: 16px;
-    }
-    
-    .search-results {
-        right: 20px;
-        font-size: 12px;
-    }
-}
-
-@media (max-width: 480px) {
-    .search-container {
-        padding: 12px 15px;
-    }
-    
-    .search-input {
-        padding: 10px 35px 10px 14px;
-        font-size: 13px;
-    }
 }
 
 body {
@@ -539,7 +394,7 @@ body {
 
 .properties-table td {
     padding: 10px 14px;
-    border-bottom: 0.25px solid #e8e8e8;
+    border-bottom: 1px solid #e8e8e8;
     color: #34495e;
 }
 
@@ -570,7 +425,7 @@ body {
 
 .document-content h1 { 
     font-size: 1.8em;
-    border-bottom: 0.25px solid #e0e0e0;
+    border-bottom: 2px solid #e8e8e8;
     padding-bottom: 0.3em;
 }
 
@@ -599,8 +454,6 @@ body {
     margin: 1.5em 0;
     color: #7f8c8d;
     font-style: italic;
-    white-space: pre-wrap;
-    word-break: break-word;
 }
 
 .document-content code {
@@ -657,8 +510,6 @@ body {
 
 .callout-content {
     flex: 1;
-    white-space: pre-wrap;
-    word-break: break-word;
 }
 
 /* 表格 */
@@ -799,7 +650,7 @@ body {
 .footer {
     margin-top: 50px;
     padding-top: 25px;
-    border-top: 0.25px solid #e8e8e8;
+    border-top: 1px solid #e8e8e8;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -826,10 +677,6 @@ body {
 /* ========== 移动端适配 ========== */
 
 @media (max-width: 768px) {
-    .doc-title a {
-        max-width: 250px;
-    }
-    
     body {
         padding: 10px;
     }
@@ -1041,14 +888,13 @@ body {
         pagination_html = self._build_pagination(page_num, total_pages)
         css = self._get_homepage_css()
 
-        # 使用普通字符串模板，避免 f-string 与 JavaScript {} 冲突
-        html_template = """<!DOCTYPE html>
+        return f"""<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>INTRA-HUB - Internal Documentation</title>
-    <style>@@CSS@@</style>
+    <style>{css}</style>
 </head>
 <body>
     <div class="header">
@@ -1056,20 +902,10 @@ body {
         <p class="subtitle">Internal Documentation Portal</p>
     </div>
 
-    <div class="search-container">
-        <input type="text" 
-               id="searchInput" 
-               class="search-input" 
-               placeholder="Search by title, ID, category, author..."
-               autocomplete="off">
-        <span class="search-icon">🔍</span>
-        <span id="searchResults" class="search-results"></span>
-    </div>
-    
     <div class="container">
         <div class="stats">
             <div class="stat-item">
-                <div class="stat-number">@@DOC_COUNT@@</div>
+                <div class="stat-number">{len(docs)}</div>
                 <div class="stat-label">Documents on this page</div>
             </div>
         </div>
@@ -1090,81 +926,20 @@ body {
                     </tr>
                 </thead>
                 <tbody>
-                    @@TABLE_HTML@@
+                    {table_html}
                 </tbody>
             </table>
         </div>
 
-        @@PAGINATION_HTML@@
+        {pagination_html}
 
         <div class="footer">
-            <p>Last updated: @@TIMESTAMP@@</p>
+            <p>Last updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
             <p class="notice">Internal Use Only - VPN Access Required</p>
         </div>
     </div>
-
-    <script>
-    // 实时搜索功能
-    (function() {
-        const searchInput = document.getElementById('searchInput');
-        const searchResults = document.getElementById('searchResults');
-        const tableRows = document.querySelectorAll('.doc-table tbody tr');
-        
-        if (!searchInput || tableRows.length === 0) return;
-        
-        searchInput.addEventListener('input', function() {
-            const query = this.value.trim().toLowerCase();
-            let visibleCount = 0;
-            
-            tableRows.forEach(row => {
-                const text = row.textContent.toLowerCase();
-                
-                if (query === '' || text.includes(query)) {
-                    row.classList.remove('hidden');
-                    row.classList.add('match');
-                    visibleCount++;
-                } else {
-                    row.classList.add('hidden');
-                    row.classList.remove('match');
-                }
-            });
-            
-            // 更新搜索结果提示
-            if (query === '') {
-                searchResults.textContent = '';
-            } else {
-                searchResults.textContent = `${visibleCount} results found`;
-            }
-            
-            // 如果没有匹配，移除高亮
-            if (query === '') {
-                tableRows.forEach(row => row.classList.remove('match'));
-            }
-        });
-        
-        // 清除按钮（可选）
-        searchInput.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                this.value = '';
-                this.dispatchEvent(new Event('input'));
-                this.blur();
-            }
-        });
-    })();
-    </script>
 </body>
-</html>
-"""
-
-        # 替换占位符
-        html = html_template.replace("@@CSS@@", css)
-        html = html.replace("@@DOC_COUNT@@", str(len(docs)))
-        html = html.replace("@@TABLE_HTML@@", table_html)
-        html = html.replace("@@PAGINATION_HTML@@", pagination_html)
-        html = html.replace("@@TIMESTAMP@@", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-        
-        return html
-
+</html>"""
 
     def _build_pagination(self, current_page: int, total_pages: int) -> str:
         """Build pagination links"""
@@ -1197,101 +972,6 @@ body {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-}
-
-
-/* 搜索容器 */
-.search-container {
-    max-width: 1400px;
-    margin: 0 auto 15px;
-    background: white;
-    padding: 20px 30px;
-    border-radius: 12px 12px 0 0;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-    position: relative;
-}
-
-.search-input {
-    width: 100%;
-    padding: 14px 45px 14px 20px;
-    font-size: 15px;
-    border: 1.5px solid #e0e0e0;
-    border-radius: 8px;
-    outline: none;
-    transition: all 0.3s ease;
-    font-family: inherit;
-    color: #2c3e50;
-}
-
-.search-input:focus {
-    border-color: #3498db;
-    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
-}
-
-.search-input::placeholder {
-    color: #95a5a6;
-}
-
-.search-icon {
-    position: absolute;
-    right: 45px;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 18px;
-    opacity: 0.5;
-    pointer-events: none;
-}
-
-.search-results {
-    position: absolute;
-    top: 100%;
-    right: 30px;
-    font-size: 13px;
-    color: #7f8c8d;
-    padding: 8px 0;
-}
-
-/* 高亮匹配行 */
-.doc-table tbody tr.hidden {
-    display: none;
-}
-
-.doc-table tbody tr.match {
-    background: #e8f4fd !important;
-}
-
-/* 移动端搜索 */
-@media (max-width: 768px) {
-    .search-container {
-        padding: 15px 20px;
-        border-radius: 8px 8px 0 0;
-    }
-    
-    .search-input {
-        padding: 12px 40px 12px 16px;
-        font-size: 14px;
-    }
-    
-    .search-icon {
-        right: 35px;
-        font-size: 16px;
-    }
-    
-    .search-results {
-        right: 20px;
-        font-size: 12px;
-    }
-}
-
-@media (max-width: 480px) {
-    .search-container {
-        padding: 12px 15px;
-    }
-    
-    .search-input {
-        padding: 10px 35px 10px 14px;
-        font-size: 13px;
-    }
 }
 
 body {
@@ -1343,7 +1023,7 @@ body {
     gap: 30px;
     margin-bottom: 30px;
     padding-bottom: 25px;
-    border-bottom: 0.25px solid #e8e8e8;
+    border-bottom: 1px solid #e8e8e8;
     flex-wrap: wrap;
 }
 
@@ -1388,7 +1068,7 @@ body {
 
 .doc-table thead {
     background: #f8f9fa;
-    border-bottom: 0.25px solid #d0d0d0;
+    border-bottom: 2px solid #e0e0e0;
 }
 
 .doc-table th {
@@ -1404,7 +1084,7 @@ body {
 
 .doc-table td {
     padding: 16px;
-    border-bottom: 0.25px solid #f0f0f0;
+    border-bottom: 1px solid #f0f0f0;
     color: #34495e;
 }
 
@@ -1449,11 +1129,6 @@ body {
     color: #2c3e50;
     text-decoration: none;
     transition: color 0.2s ease;
-    display: block;
-    max-width: 400px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
 }
 
 .doc-title a:hover {
@@ -1509,7 +1184,7 @@ body {
 .footer {
     margin-top: 40px;
     padding-top: 25px;
-    border-top: 0.25px solid #e8e8e8;
+    border-top: 1px solid #e8e8e8;
     text-align: center;
     color: #95a5a6;
     font-size: 0.85em;
@@ -1527,10 +1202,6 @@ body {
 /* ========== 移动端适配 ========== */
 
 @media (max-width: 768px) {
-    .doc-title a {
-        max-width: 250px;
-    }
-    
     body {
         padding: 10px;
     }
